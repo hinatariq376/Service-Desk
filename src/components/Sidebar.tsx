@@ -16,7 +16,7 @@ interface SidebarProps {
 
 export default function Sidebar({ items, title }: SidebarProps) {
   return (
-    <aside className="w-60 shrink-0 bg-slate-900 border-r border-slate-800 flex flex-col h-full">
+    <aside className="hidden md:flex md:w-64 shrink-0 bg-slate-900 border-r border-slate-800  flex-col h-full">
       <div className="flex items-center gap-2.5 px-4 py-4 border-b border-slate-800">
         <div className="w-7 h-7 rounded-lg bg-indigo-600 flex items-center justify-center shrink-0">
           <Shield className="w-4 h-4 text-white" />

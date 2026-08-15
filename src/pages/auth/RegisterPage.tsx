@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Shield, Eye, EyeOff, Headphones, User, Settings } from "lucide-react";
+import { Shield, Eye, EyeOff, Headphones, User } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import type { Role } from "../../types";
 
+// Public registration se ADMIN remove kar diya hai
 const ROLE_CONFIG = [
   { role: "CUSTOMER" as Role, label: "Customer", icon: User, desc: "Submit support requests" },
   { role: "SUPPORT_AGENT" as Role, label: "Support Agent", icon: Headphones, desc: "Resolve assigned tickets" },
-  { role: "ADMIN" as Role, label: "Admin", icon: Settings, desc: "Full system oversight" },
 ];
 
 export default function RegisterPage() {
@@ -58,7 +58,7 @@ export default function RegisterPage() {
         </div>
 
         <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 shadow-2xl">
-          <div className="grid grid-cols-3 gap-2 mb-6 p-1 bg-zinc-800/60 rounded-xl">
+          <div className="grid grid-cols-2 gap-2 mb-6 p-1 bg-zinc-800/60 rounded-xl">
             {ROLE_CONFIG.map(({ role: r, label, icon: Icon }) => (
               <button
                 key={r}

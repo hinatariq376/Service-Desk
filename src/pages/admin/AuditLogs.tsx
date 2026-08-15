@@ -13,14 +13,14 @@ const ACTION_STYLES: Record<string, string> = {
 function Diff({ old: o, newVal: n }: { old?: Record<string, unknown>; newVal?: Record<string, unknown> }) {
   if (!o && !n) return null;
   return (
-    <div className="flex items-center gap-1.5 flex-wrap">
+    <div className="flex items-center gap-1.5 flex-wrap min-w-0">
       {o && Object.keys(o).length > 0 && (
-        <span className="font-mono text-[10px] bg-red-950/50 text-red-400 border border-red-900/40 px-1.5 py-0.5 rounded max-w-xs truncate">
+        <span className="font-mono text-[10px] bg-red-950/50 text-red-400 border border-red-900/40 px-1.5 py-0.5 rounded max-w-full sm:max-w-xs truncate">
           -{JSON.stringify(o)}
         </span>
       )}
       {n && Object.keys(n).length > 0 && (
-        <span className="font-mono text-[10px] bg-emerald-950/50 text-emerald-400 border border-emerald-900/40 px-1.5 py-0.5 rounded max-w-xs truncate">
+        <span className="font-mono text-[10px] bg-emerald-950/50 text-emerald-400 border border-emerald-900/40 px-1.5 py-0.5 rounded max-w-full sm:max-w-xs truncate">
           +{JSON.stringify(n)}
         </span>
       )}
@@ -48,100 +48,138 @@ export default function AuditLogs({ logs }: AuditLogsProps) {
   });
 
   return (
-    <div className="p-6 space-y-5 max-w-7xl mx-auto">
-      <div className="flex items-center justify-between animate-fade-up">
+    <div className="p-3 sm:p-6 space-y-4 sm:space-y-5 max-w-7xl mx-auto w-full min-w-0">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-fade-up">
         <div>
-          <h2 className="text-lg font-bold text-white">Audit Trail</h2>
-          <p className="text-xs text-slate-500 mt-0.5">Immutable event log — every actor action recorded with timestamp and diff</p>
+          <h2 className="text-base sm:text-lg font-bold text-zinc-50">Audit Trail</h2>
+          <p className="text-xs text-zinc-500 mt-0.5">
+            Immutable event log — every actor action recorded with timestamp and diff
+          </p>
         </div>
-        <button className="inline-flex items-center gap-1.5 text-xs text-slate-400 border border-slate-700 rounded-lg px-3 py-2 hover:border-slate-600 transition-colors">
+        <button
+          type="button"
+          className="self-start sm:self-auto inline-flex items-center gap-1.5 text-xs text-zinc-400 border border-zinc-700 rounded-lg px-3 py-2 hover:border-zinc-600 hover:text-zinc-200 transition-colors"
+        >
           <Download className="w-3.5 h-3.5" />
           Export CSV
         </button>
       </div>
 
-      {/* Stats row */}
-      <div className="grid grid-cols-3 gap-3 animate-fade-up" style={{ animationDelay: "40ms" }}>
+      {/* Stats Row */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 animate-fade-up" style={{ animationDelay: "40ms" }}>
         {[
           { label: "Total Events", value: logs.length },
           { label: "SLA Breach Events", value: logs.filter((l) => l.action === "SLA_BREACHED").length },
           { label: "Status Changes", value: logs.filter((l) => l.action === "STATUS_CHANGED").length },
         ].map((s) => (
-          <div key={s.label} className="bg-slate-900 border border-slate-800 rounded-xl p-4">
-            <div className="text-xs text-slate-500 mb-1">{s.label}</div>
-            <div className="text-2xl font-bold text-white">{s.value}</div>
+          <div key={s.label} className="bg-zinc-900 border border-zinc-800 rounded-xl p-3.5 sm:p-4">
+            <div className="text-xs text-zinc-500 mb-1">{s.label}</div>
+            <div className="text-xl sm:text-2xl font-bold text-zinc-100">{s.value}</div>
           </div>
         ))}
       </div>
 
       {/* Filters */}
-      <div className="flex items-center gap-3 animate-fade-up" style={{ animationDelay: "80ms" }}>
-        <div className="relative flex-1 max-w-xs">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 animate-fade-up" style={{ animationDelay: "80ms" }}>
+        <div className="relative flex-1 sm:max-w-xs">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-500" />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search actor, entity, action…"
-            className="w-full bg-slate-800 border border-slate-700 rounded-lg pl-9 pr-3.5 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+            className="w-full bg-zinc-800 border border-zinc-700 rounded-lg pl-9 pr-3.5 py-2 text-xs sm:text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
           />
         </div>
         <select
           value={actionFilter}
           onChange={(e) => setActionFilter(e.target.value)}
-          className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-xs sm:text-sm text-zinc-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
         >
-          {actions.map((a) => <option key={a} value={a}>{a === "ALL" ? "All Actions" : a.replace(/_/g, " ")}</option>)}
+          {actions.map((a) => (
+            <option key={a} value={a}>
+              {a === "ALL" ? "All Actions" : a.replace(/_/g, " ")}
+            </option>
+          ))}
         </select>
-        <span className="text-xs text-slate-500 ml-auto">{filtered.length} events</span>
+        <span className="text-xs text-zinc-500 sm:ml-auto">{filtered.length} events</span>
       </div>
 
-      {/* Log entries */}
+      {/* Log Entries */}
       <div className="space-y-2 animate-fade-up" style={{ animationDelay: "120ms" }}>
         {filtered.map((log, i) => (
           <div
             key={log.id}
-            className="bg-slate-900 border border-slate-800 rounded-xl hover:border-slate-700 transition-all animate-fade-up cursor-pointer"
-            style={{ animationDelay: `${i * 20}ms` }}
+            className="bg-zinc-900 border border-zinc-800 rounded-xl hover:border-zinc-700 transition-all cursor-pointer"
             onClick={() => setExpandedId(expandedId === log.id ? null : log.id)}
           >
-            <div className="flex items-center gap-4 px-4 py-3">
-              <span className="font-mono text-[10px] text-slate-500 w-36 shrink-0">
-                {new Date(log.timestamp).toISOString().replace("T", " ").slice(0, 19)} UTC
-              </span>
-              <div className="flex items-center gap-1.5 w-36 shrink-0">
-                <div className={`w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-bold text-white ${
-                  log.actorRole === "ADMIN" ? "bg-purple-600" : log.actorRole === "SUPPORT_AGENT" ? "bg-emerald-600" : "bg-blue-600"
-                }`}>
-                  {log.actorName.split(" ").map((n) => n[0]).join("")}
-                </div>
-                <div>
-                  <div className="text-xs font-medium text-slate-200 leading-none">{log.actorName}</div>
-                  <div className="text-[9px] text-slate-500">{log.actorRole.replace("_", " ")}</div>
+            <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4 p-3.5 sm:p-4">
+              <div className="flex items-center justify-between md:justify-start gap-3 shrink-0">
+                <span className="font-mono text-[10px] text-zinc-500 md:w-36 shrink-0">
+                  {new Date(log.timestamp).toISOString().replace("T", " ").slice(0, 19)} UTC
+                </span>
+                <div className="flex items-center gap-1.5 md:w-36 shrink-0">
+                  <div
+                    className={`w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-bold text-white shrink-0 ${
+                      log.actorRole === "ADMIN" ? "bg-purple-600" : log.actorRole === "SUPPORT_AGENT" ? "bg-emerald-600" : "bg-blue-600"
+                    }`}
+                  >
+                    {log.actorName
+                      .split(" ")
+                      .map((n) => n[0])
+                      .join("")}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-xs font-medium text-zinc-200 truncate leading-none">{log.actorName}</div>
+                    <div className="text-[9px] text-zinc-500 mt-0.5">{log.actorRole.replace("_", " ")}</div>
+                  </div>
                 </div>
               </div>
-              <span className={`font-mono text-[10px] font-bold px-2 py-0.5 rounded border ${ACTION_STYLES[log.action] || "text-slate-400 bg-slate-800 border-slate-700"}`}>
-                {log.action}
-              </span>
-              <span className="font-mono text-xs text-indigo-400 w-28 shrink-0">{log.entityId}</span>
-              <div className="flex-1 min-w-0">
-                <Diff old={log.oldValue} newVal={log.newValue} />
+
+              <div className="flex items-center gap-2 flex-wrap md:flex-nowrap flex-1 min-w-0">
+                <span
+                  className={`font-mono text-[10px] font-bold px-2 py-0.5 rounded border shrink-0 ${
+                    ACTION_STYLES[log.action] || "text-zinc-400 bg-zinc-800 border-zinc-700"
+                  }`}
+                >
+                  {log.action}
+                </span>
+                <span className="font-mono text-xs text-indigo-400 shrink-0 md:w-28 truncate">{log.entityId}</span>
+                <div className="flex-1 min-w-0 w-full md:w-auto mt-1 md:mt-0">
+                  <Diff old={log.oldValue} newVal={log.newValue} />
+                </div>
               </div>
-              <ChevronDown className={`w-3.5 h-3.5 text-slate-600 shrink-0 transition-transform ${expandedId === log.id ? "rotate-180" : ""}`} />
+
+              <ChevronDown
+                className={`w-3.5 h-3.5 text-zinc-500 shrink-0 self-end md:self-center transition-transform ${
+                  expandedId === log.id ? "rotate-180" : ""
+                }`}
+              />
             </div>
+
             {expandedId === log.id && (
-              <div className="border-t border-slate-800 px-4 py-3 bg-slate-800/30 rounded-b-xl">
-                <div className="grid grid-cols-2 gap-4 text-xs">
+              <div className="border-t border-zinc-800 p-3.5 sm:p-4 bg-zinc-800/30 rounded-b-xl">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                   <div>
-                    <div className="text-slate-500 font-semibold uppercase tracking-wider text-[10px] mb-1.5 flex items-center gap-1"><Info className="w-3 h-3" />Entity Details</div>
-                    <div className="space-y-1 text-slate-300">
-                      <div>ID: <span className="font-mono text-indigo-400">{log.entityId}</span></div>
-                      <div>Type: <span className="text-slate-200">{log.entityType}</span></div>
-                      <div>Actor: <span className="text-slate-200">{log.actorName}</span></div>
+                    <div className="text-zinc-500 font-semibold uppercase tracking-wider text-[10px] mb-1.5 flex items-center gap-1">
+                      <Info className="w-3 h-3" />
+                      Entity Details
+                    </div>
+                    <div className="space-y-1 text-zinc-300">
+                      <div>
+                        ID: <span className="font-mono text-indigo-400">{log.entityId}</span>
+                      </div>
+                      <div>
+                        Type: <span className="text-zinc-200">{log.entityType}</span>
+                      </div>
+                      <div>
+                        Actor: <span className="text-zinc-200">{log.actorName}</span>
+                      </div>
                     </div>
                   </div>
                   <div>
-                    <div className="text-slate-500 font-semibold uppercase tracking-wider text-[10px] mb-1.5">Full Diff</div>
-                    <pre className="font-mono text-[10px] text-slate-400 bg-slate-900 rounded p-2 overflow-auto max-h-24">
+                    <div className="text-zinc-500 font-semibold uppercase tracking-wider text-[10px] mb-1.5">Full Diff</div>
+                    <pre className="font-mono text-[10px] text-zinc-400 bg-zinc-950 rounded-lg p-2.5 overflow-auto max-h-32 border border-zinc-800">
                       {JSON.stringify({ before: log.oldValue, after: log.newValue }, null, 2)}
                     </pre>
                   </div>
@@ -150,6 +188,12 @@ export default function AuditLogs({ logs }: AuditLogsProps) {
             )}
           </div>
         ))}
+
+        {filtered.length === 0 && (
+          <div className="py-12 text-center bg-zinc-900 border border-zinc-800 rounded-xl">
+            <p className="text-zinc-500 text-xs sm:text-sm">No events match the search criteria.</p>
+          </div>
+        )}
       </div>
     </div>
   );

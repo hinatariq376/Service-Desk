@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { UserCheck, AlertTriangle, Clock as ClockIcon } from "lucide-react";
+import { UserCheck, AlertTriangle, Clock as ClockIcon, ArrowLeft } from "lucide-react";
 import AppLayout from "../components/AppLayout";
 import TicketListPanel from "../pages/agent/TicketListPanel";
 import TicketDetailPane from "../pages/agent/TicketDetailPane";
@@ -76,8 +76,13 @@ export default function AgentQueue() {
       loading={loading}
       error={error}
     >
-      <div className="flex h-full overflow-hidden" style={{ height: "calc(100vh - 56px)" }}>
-        <div className="w-80 shrink-0 border-r border-zinc-800 flex flex-col overflow-hidden bg-zinc-900/40">
+      <div className="flex h-full overflow-hidden w-full relative" style={{ height: "calc(100vh - 56px)" }}>
+        {/* Ticket List Column (Full width on mobile, 80 on desktop) */}
+        <div
+          className={`w-full md:w-80 shrink-0 border-r border-zinc-800 flex flex-col overflow-hidden bg-zinc-900/40 ${
+            selectedId ? "hidden md:flex" : "flex"
+          }`}
+        >
           <div className="px-4 py-3 border-b border-zinc-800 shrink-0">
             <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">
               {listTickets.length} ticket{listTickets.length !== 1 ? "s" : ""} — strict assignment isolation
@@ -93,17 +98,31 @@ export default function AgentQueue() {
           </div>
         </div>
 
-        <div className="flex-1 overflow-hidden">
+        {/* Ticket Detail Column (Hidden on mobile when no ticket selected) */}
+        <div className={`flex-1 overflow-hidden flex-col ${selectedId ? "flex" : "hidden md:flex"}`}>
           {selectedTicket ? (
-            <TicketDetailPane
-              key={selectedTicket.id}
-              ticket={selectedTicket}
-              messages={messages}
-              userRole="SUPPORT_AGENT"
-              userName={user.name}
-            />
+            <div className="flex flex-col h-full w-full min-w-0">
+              {/* Back button header on mobile */}
+              <div className="md:hidden px-4 py-2.5 border-b border-zinc-800 bg-zinc-950 flex items-center shrink-0">
+                <button
+                  onClick={() => setSelectedId(null)}
+                  className="inline-flex items-center gap-1.5 text-xs text-indigo-400 font-semibold hover:text-indigo-300 transition-colors"
+                >
+                  <ArrowLeft className="w-4 h-4" /> Back to Queue List
+                </button>
+              </div>
+              <div className="flex-1 overflow-hidden">
+                <TicketDetailPane
+                  key={selectedTicket.id}
+                  ticket={selectedTicket}
+                  messages={messages}
+                  userRole="SUPPORT_AGENT"
+                  userName={user.name}
+                />
+              </div>
+            </div>
           ) : (
-            <div className="flex items-center justify-center h-full flex-col gap-3">
+            <div className="flex items-center justify-center h-full flex-col gap-3 p-6 text-center">
               <div className="w-12 h-12 rounded-2xl bg-zinc-800 flex items-center justify-center">
                 <UserCheck className="w-5 h-5 text-zinc-600" />
               </div>

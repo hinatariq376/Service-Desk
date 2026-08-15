@@ -71,40 +71,43 @@ export default function TicketDetailPane({
   };
 
   return (
-    <div className="flex flex-col h-full overflow-hidden animate-slide-in">
-      <div className="px-6 py-4 border-b border-zinc-800 shrink-0">
-        <div className="flex items-start justify-between gap-4">
+    <div className="flex flex-col h-full overflow-hidden animate-slide-in min-w-0 w-full">
+      {/* Header */}
+      <div className="px-4 py-3 sm:px-6 sm:py-4 border-b border-zinc-800 shrink-0">
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4">
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2 mb-1">
+            <div className="flex items-center gap-1.5 sm:gap-2 mb-1 flex-wrap">
               <span className="font-mono text-xs font-bold text-indigo-400">{ticket.displayId}</span>
-              <ChevronRight className="w-3 h-3 text-zinc-600" />
-              <span className="text-xs text-zinc-500">{ticket.category}</span>
+              <ChevronRight className="w-3 h-3 text-zinc-600 shrink-0" />
+              <span className="text-xs text-zinc-500 truncate max-w-[150px] sm:max-w-none">{ticket.category}</span>
             </div>
-            <h2 className="text-base font-bold text-zinc-50 leading-snug">{ticket.title}</h2>
+            <h2 className="text-sm sm:text-base font-bold text-zinc-50 leading-snug break-words">{ticket.title}</h2>
             <div className="flex items-center gap-2 mt-2 flex-wrap">
               <StatusBadge status={ticket.status} />
               <PriorityBadge priority={ticket.priority} />
-              <span className="text-xs text-zinc-500">· {ticket.customerName}</span>
+              <span className="text-xs text-zinc-500 truncate">· {ticket.customerName}</span>
               {ticket.assignedAgentName && (
-                <span className="text-xs text-zinc-500">· Assigned: {ticket.assignedAgentName}</span>
+                <span className="text-xs text-zinc-500 truncate">· Assigned: {ticket.assignedAgentName}</span>
               )}
             </div>
           </div>
-          <div className="shrink-0">
+          <div className="shrink-0 self-start sm:self-auto">
             <SLATimer deadline={ticket.slaDeadline} breach={ticket.slaBreach} size="lg" />
           </div>
         </div>
 
         {!readOnly && allowed.length > 0 && (
-          <div className="flex items-center gap-2 mt-4 flex-wrap">
-            <span className="text-xs text-zinc-500">Actions:</span>
+          <div className="flex items-center gap-1.5 sm:gap-2 mt-3 sm:mt-4 flex-wrap">
+            <span className="text-xs text-zinc-500 w-full sm:w-auto">Actions:</span>
             {allowed.map((next) => (
               <button
                 key={next}
                 type="button"
                 disabled={submitting}
                 onClick={() => handleTransition(next)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all disabled:opacity-50 ${TRANSITION_COLORS[next] ?? "bg-zinc-700 text-white"}`}
+                className={`px-2.5 py-1.5 sm:px-3 sm:py-1.5 rounded-lg text-xs font-semibold transition-all disabled:opacity-50 shrink-0 ${
+                  TRANSITION_COLORS[next] ?? "bg-zinc-700 text-white"
+                }`}
               >
                 {getTransitionAction(ticket.status, next)}
               </button>
@@ -123,8 +126,9 @@ export default function TicketDetailPane({
         )}
       </div>
 
-      <div className="px-6 py-3 border-b border-zinc-800 bg-zinc-900/20 shrink-0">
-        <p className="text-sm text-zinc-300 leading-relaxed">{ticket.description}</p>
+      {/* Description */}
+      <div className="px-4 py-3 sm:px-6 sm:py-3 border-b border-zinc-800 bg-zinc-900/20 shrink-0 max-h-40 overflow-y-auto">
+        <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed break-words">{ticket.description}</p>
         {ticket.tags && ticket.tags.length > 0 && (
           <div className="flex gap-1.5 mt-2 flex-wrap">
             {ticket.tags.map((tag) => (
@@ -140,14 +144,15 @@ export default function TicketDetailPane({
         )}
       </div>
 
-      <div className="flex-1 overflow-y-auto px-6 py-4 space-y-3">
+      {/* Message Thread */}
+      <div className="flex-1 overflow-y-auto px-3 sm:px-6 py-3 sm:py-4 space-y-3 min-h-0">
         {thread.length === 0 && (
           <p className="text-xs text-zinc-600 text-center pt-8 italic">No messages yet. Start the conversation below.</p>
         )}
         {thread.map((msg) => (
           <div
             key={msg.id}
-            className={`rounded-xl p-4 ${
+            className={`rounded-xl p-3 sm:p-4 ${
               msg.isInternal
                 ? "bg-yellow-950/40 border border-yellow-900/50"
                 : msg.authorRole === "CUSTOMER"
@@ -155,23 +160,23 @@ export default function TicketDetailPane({
                   : "bg-indigo-950/30 border border-indigo-900/30"
             }`}
           >
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
+            <div className="flex items-center justify-between mb-2 gap-2 flex-wrap">
+              <div className="flex items-center gap-2 min-w-0">
                 <div
-                  className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white ${
+                  className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0 ${
                     msg.isInternal ? "bg-yellow-700" : msg.authorRole === "CUSTOMER" ? "bg-blue-600" : "bg-indigo-600"
                   }`}
                 >
                   {msg.authorName.split(" ").map((n) => n[0]).join("")}
                 </div>
-                <span className="text-xs font-semibold text-zinc-200">{msg.authorName}</span>
+                <span className="text-xs font-semibold text-zinc-200 truncate">{msg.authorName}</span>
                 {msg.isInternal && (
-                  <span className="inline-flex items-center gap-1 text-[10px] font-bold text-yellow-500 bg-yellow-950/50 px-1.5 py-0.5 rounded border border-yellow-900/50">
+                  <span className="inline-flex items-center gap-1 text-[10px] font-bold text-yellow-500 bg-yellow-950/50 px-1.5 py-0.5 rounded border border-yellow-900/50 shrink-0">
                     <Lock className="w-2.5 h-2.5" /> Internal
                   </span>
                 )}
               </div>
-              <span className="text-[10px] text-zinc-600">
+              <span className="text-[10px] text-zinc-500 whitespace-nowrap ml-auto">
                 {new Date(msg.createdAt).toLocaleString("en-GB", {
                   day: "2-digit",
                   month: "short",
@@ -180,15 +185,16 @@ export default function TicketDetailPane({
                 })}
               </span>
             </div>
-            <p className="text-sm text-zinc-300 leading-relaxed">{msg.content}</p>
+            <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed break-words">{msg.content}</p>
           </div>
         ))}
       </div>
 
+      {/* Input Box */}
       {canComment && (
-        <div className="px-6 py-4 border-t border-zinc-800 shrink-0">
+        <div className="px-3 sm:px-6 py-3 sm:py-4 border-t border-zinc-800 shrink-0 bg-zinc-950">
           {userRole !== "CUSTOMER" && (
-            <div className="flex items-center gap-2 mb-2">
+            <div className="flex items-center gap-2 mb-2 flex-wrap">
               <button
                 type="button"
                 onClick={() => setInternalMode(!internalMode)}
@@ -201,12 +207,12 @@ export default function TicketDetailPane({
                 {internalMode ? <ToggleRight className="w-3.5 h-3.5" /> : <ToggleLeft className="w-3.5 h-3.5" />}
                 Internal Note
               </button>
-              <span className="text-xs text-zinc-600">
+              <span className="text-[11px] text-zinc-500">
                 {internalMode ? "Visible to agents only" : "Customer will see this"}
               </span>
             </div>
           )}
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-end">
             <textarea
               value={reply}
               onChange={(e) => setReply(e.target.value)}
@@ -215,7 +221,7 @@ export default function TicketDetailPane({
               }}
               placeholder={internalMode ? "Add an internal note…" : "Write a reply…"}
               rows={2}
-              className={`flex-1 bg-zinc-800 border rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-2 transition-all resize-none ${
+              className={`flex-1 bg-zinc-800 border rounded-lg px-3 py-2 sm:px-3.5 sm:py-2.5 text-xs sm:text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-2 transition-all resize-none ${
                 internalMode ? "border-yellow-800 focus:ring-yellow-600" : "border-zinc-700 focus:ring-indigo-500"
               }`}
             />
@@ -223,7 +229,7 @@ export default function TicketDetailPane({
               type="button"
               onClick={handleSend}
               disabled={!reply.trim() || submitting}
-              className={`self-end px-4 py-2.5 rounded-lg font-semibold text-xs transition-all flex items-center gap-1.5 disabled:opacity-40 ${
+              className={`px-4 py-2.5 rounded-lg font-semibold text-xs transition-all flex items-center justify-center gap-1.5 disabled:opacity-40 shrink-0 ${
                 internalMode ? "bg-yellow-600 hover:bg-yellow-500 text-zinc-900" : "bg-indigo-600 hover:bg-indigo-500 text-white"
               }`}
             >
@@ -231,7 +237,7 @@ export default function TicketDetailPane({
               Send
             </button>
           </div>
-          <p className="text-[10px] text-zinc-700 mt-1">⌘ Enter to send · {userName}</p>
+          <p className="text-[10px] text-zinc-600 mt-1.5">⌘ Enter to send · {userName}</p>
         </div>
       )}
     </div>

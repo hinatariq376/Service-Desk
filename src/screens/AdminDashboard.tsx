@@ -53,11 +53,13 @@ export default function AdminDashboard() {
       loading={loading}
       error={error}
     >
-      {page === "analytics" && <OverviewAnalytics tickets={tickets} />}
-      {page === "users" && <UserManagement />}
-      {page === "tickets" && <AllSystemTickets tickets={tickets} />}
-      {page === "audit" && <AuditLogs logs={logs} />}
-      {page === "sla" && <SLASettings />}
+      <div className="w-full min-w-0 h-full overflow-y-auto p-3 sm:p-6">
+        {page === "analytics" && <OverviewAnalytics tickets={tickets} />}
+        {page === "users" && <UserManagement />}
+        {page === "tickets" && <AllSystemTickets tickets={tickets} />}
+        {page === "audit" && <AuditLogs logs={logs} />}
+        {page === "sla" && <SLASettings />}
+      </div>
     </AppLayout>
   );
 }

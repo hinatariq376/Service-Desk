@@ -43,3 +43,23 @@ Refactor mock React/Vite prototype into production Service Desk connected to liv
 ### Outcome
 
 Clean compile via `npm run build`. Application ready for live evaluation once demo accounts are seeded in Supabase.
+
+
+
+
+
+
+# AI Engineering Log
+
+## Initial Environment & Architecture Audit
+* **Date:** August 19, 2026
+* **AI Tool Used:** Gemini / Continue Agent
+* **Task:** Initialize project audit log system and correct database data-retention policies.
+
+### Workflow
+* **Prompt Given:** Audit current user deletion policy and missing audit logging tables for enterprise compliance.
+* **AI Recommendation:** 
+  1. Replace `ON DELETE CASCADE` with soft deletion or nullable foreign keys on tickets table.
+  2. Implement dedicated `audit_logs` table for tracking state transitions.
+* **Human Review:** Verified architectural gaps highlighted during code review.
+* **Action Taken:** Initialized tracking documentation and scheduled database schema migration.

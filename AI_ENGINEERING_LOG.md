@@ -79,3 +79,17 @@ Clean compile via `npm run build`. Application ready for live evaluation once de
   - Added `is_deleted` flag on `tickets` table to replace dangerous `CASCADE` deletes.
 * **Human Review:** Checked foreign key constraints to ensure user deletion retains ticket history for SLA auditing.
 * **Next Action:** Implement backend trigger / Supabase client service for automated log insertion.
+
+# AI Engineering Log
+
+## Audit Logging & Data Retention Implementation
+* **Date:** August 21, 2026
+* **AI Tool Used:** Kyro AI / Gemini
+* **Task:** Add `audit_logs` table and implement soft deletion for ticket records.
+
+### Execution Summary
+* **Database Updates:**
+  - Created `audit_logs` table tracking `actor_id`, `action`, `entity_type`, and state differences (`old_values`/`new_values`).
+  - Added `is_deleted` flag on `tickets` table to replace dangerous `CASCADE` deletes.
+* **Human Review:** Verified schema constraints to ensure historical ticket data remains intact for SLA audits.
+* **Next Action:** Implement state transition constraints and unit tests for SLA calculations.

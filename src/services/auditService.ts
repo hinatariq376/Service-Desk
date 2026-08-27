@@ -13,7 +13,7 @@ export interface AuditPayload {
 }
 
 export async function insertAuditLog(payload: AuditPayload) {
-  const { error } = await supabase.from("audit_logs").insert({
+  const { data, error } = await supabase.from("audit_logs").insert({
     actor_id: payload.actorId,
     actor_name: payload.actorName,
     actor_role: payload.actorRole,
@@ -22,9 +22,14 @@ export async function insertAuditLog(payload: AuditPayload) {
     entity_type: payload.entityType,
     old_value: payload.oldValue ?? null,
     new_value: payload.newValue ?? null,
-  });
+  }).select();
 
   if (error) {
-    console.error("Audit log insert failed:", error.message);
+    console.error("Audit log insert failed:", error.message, error);
+    console.error("Failed payload:", payload);
+  } else {
+    console.log("Audit log inserted successfully:", payload.action, payload.entityId);
   }
+  
+  return { data, error };
 }

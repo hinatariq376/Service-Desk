@@ -23,8 +23,9 @@ const PAGE_TITLES: Record<AdminPage, string> = {
 export default function AdminDashboard() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
-  const { tickets, logs, loading, error } = useTickets();
+  const { tickets, logs, loading, error, refresh } = useTickets();
   const [page, setPage] = useState<AdminPage>("analytics");
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   if (!user) return null;
 
@@ -39,6 +40,15 @@ export default function AdminDashboard() {
   const handleLogout = async () => {
     await signOut();
     navigate("/login");
+  };
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await refresh();
+    } finally {
+      setIsRefreshing(false);
+    }
   };
 
   return (
@@ -57,7 +67,7 @@ export default function AdminDashboard() {
         {page === "analytics" && <OverviewAnalytics tickets={tickets} />}
         {page === "users" && <UserManagement />}
         {page === "tickets" && <AllSystemTickets tickets={tickets} />}
-        {page === "audit" && <AuditLogs logs={logs} />}
+        {page === "audit" && <AuditLogs logs={logs} onRefresh={handleRefresh} isRefreshing={isRefreshing} />}
         {page === "sla" && <SLASettings />}
       </div>
     </AppLayout>

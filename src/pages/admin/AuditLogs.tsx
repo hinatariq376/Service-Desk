@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, Download, ChevronDown, Info } from "lucide-react";
+import { Search, Download, ChevronDown, Info, RefreshCw } from "lucide-react";
 import type { AuditLog } from "../../types";
 
 const ACTION_STYLES: Record<string, string> = {
@@ -8,6 +8,9 @@ const ACTION_STYLES: Record<string, string> = {
   AGENT_ASSIGNED: "text-blue-400 bg-blue-950/40 border-blue-900/50",
   TICKET_CREATED: "text-emerald-400 bg-emerald-950/40 border-emerald-900/50",
   SLA_SETTINGS_UPDATED: "text-amber-400 bg-amber-950/40 border-amber-900/50",
+  PRIORITY_UPDATED: "text-orange-400 bg-orange-950/40 border-orange-900/50",
+  COMMENT_ADDED: "text-cyan-400 bg-cyan-950/40 border-cyan-900/50",
+  INTERNAL_NOTE_ADDED: "text-purple-400 bg-purple-950/40 border-purple-900/50",
 };
 
 function Diff({ old: o, newVal: n }: { old?: Record<string, unknown>; newVal?: Record<string, unknown> }) {
@@ -30,9 +33,11 @@ function Diff({ old: o, newVal: n }: { old?: Record<string, unknown>; newVal?: R
 
 interface AuditLogsProps {
   logs: AuditLog[];
+  onRefresh?: () => void;
+  isRefreshing?: boolean;
 }
 
-export default function AuditLogs({ logs }: AuditLogsProps) {
+export default function AuditLogs({ logs, onRefresh, isRefreshing }: AuditLogsProps) {
   const [search, setSearch] = useState("");
   const [actionFilter, setActionFilter] = useState("ALL");
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -57,13 +62,26 @@ export default function AuditLogs({ logs }: AuditLogsProps) {
             Immutable event log — every actor action recorded with timestamp and diff
           </p>
         </div>
-        <button
-          type="button"
-          className="self-start sm:self-auto inline-flex items-center gap-1.5 text-xs text-zinc-400 border border-zinc-700 rounded-lg px-3 py-2 hover:border-zinc-600 hover:text-zinc-200 transition-colors"
-        >
-          <Download className="w-3.5 h-3.5" />
-          Export CSV
-        </button>
+        <div className="flex gap-2">
+          {onRefresh && (
+            <button
+              type="button"
+              onClick={onRefresh}
+              disabled={isRefreshing}
+              className="self-start sm:self-auto inline-flex items-center gap-1.5 text-xs text-zinc-400 border border-zinc-700 rounded-lg px-3 py-2 hover:border-zinc-600 hover:text-zinc-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
+              {isRefreshing ? 'Refreshing...' : 'Refresh'}
+            </button>
+          )}
+          <button
+            type="button"
+            className="self-start sm:self-auto inline-flex items-center gap-1.5 text-xs text-zinc-400 border border-zinc-700 rounded-lg px-3 py-2 hover:border-zinc-600 hover:text-zinc-200 transition-colors"
+          >
+            <Download className="w-3.5 h-3.5" />
+            Export CSV
+          </button>
+        </div>
       </div>
 
       {/* Stats Row */}

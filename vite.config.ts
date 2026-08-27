@@ -1,3 +1,4 @@
+/// <reference types="vitest" />
 import { defineConfig, type HtmlTagDescriptor, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 // import tailwindcss from '@tailwindcss/vite'
@@ -6,6 +7,8 @@ import path from 'node:path'
 // import siteConfiguration from './.figma/make/site.json'
 
 // Vite config — https://vitejs.dev/config/
+// The `test` key is picked up by Vitest (via the triple-slash reference above)
+// and ignored by the regular Vite build.
 export default defineConfig(({ mode }) => {
   // .figma/make/deploy-preview passes `--mode development` for cached-preview builds.
   const emitSourcemaps = mode === 'development'
@@ -39,6 +42,39 @@ export default defineConfig(({ mode }) => {
     preview: {
       host: '0.0.0.0',
       port: parseInt(process.env.PORT || '8443'),
+    },
+
+    // -------------------------------------------------------------------------
+    // Vitest configuration
+    // Docs: https://vitest.dev/config/
+    // -------------------------------------------------------------------------
+    test: {
+      // Use the Node environment — our pure-logic modules (sla.ts, stateMachine.ts)
+      // have no DOM dependencies, so Node is faster and lighter than jsdom.
+      environment: 'node',
+
+      // Expose describe/it/expect/vi globally so test files stay import-free.
+      globals: true,
+
+      // Glob patterns for test files.
+      include: ['src/**/*.test.ts', 'src/**/*.spec.ts'],
+
+      // Always print a verbose per-test result in CI / terminal.
+      reporters: ['verbose'],
+
+      // Coverage via V8 (requires @vitest/coverage-v8).
+      coverage: {
+        provider: 'v8',
+        include: ['src/lib/**/*.ts', 'src/services/**/*.ts'],
+        exclude: ['src/lib/supabase.ts', 'src/lib/database.types.ts'],
+        reporter: ['text', 'lcov'],
+        reportsDirectory: './coverage',
+      },
+
+      // Resolve the same path aliases as the main Vite build.
+      alias: {
+        '@': path.resolve(__dirname, './src'),
+      },
     },
   }
 })

@@ -1,9 +1,8 @@
 import { supabase } from "../lib/supabase";
-import { cacheUsers, formatTicketId, mapComment, mapAuditLog, mapTicket } from "../lib/mappers";
+import { cacheUsers, mapComment, mapAuditLog, mapTicket } from "../lib/mappers";
 import { computeSLADeadlines, isSLABreached } from "../lib/sla";
 import { validateTransition } from "../lib/stateMachine";
-import { insertAuditLog } from "./auditService";
-import type { Message, Priority, Role, Ticket, TicketStatus, User } from "../types";
+import type { Message, Priority, Ticket, TicketStatus, User } from "../types";
 
 async function loadUserDirectory() {
   const { data } = await supabase.from("users").select("*");
@@ -13,12 +12,16 @@ async function loadUserDirectory() {
 export async function fetchTicketsForUser(user: User): Promise<Ticket[]> {
   await loadUserDirectory();
 
-  let query = supabase.from("tickets").select("*").order("created_at", { ascending: false });
+  let query = supabase
+    .from("tickets")
+    .select("*")
+    .is("deleted_at", null)
+    .order("created_at", { ascending: false });
 
   if (user.role === "CUSTOMER") {
     query = query.eq("customer_id", user.id);
   } else if (user.role === "SUPPORT_AGENT") {
-    query = query.eq("assigned_agent_id", user.id);
+    query = query.or(`assigned_agent_id.eq.${user.id},assigned_agent_id.is.null`);
   }
 
   const { data, error } = await query;
@@ -36,6 +39,7 @@ export async function fetchMessagesForTickets(ticketIds: string[]): Promise<Mess
     .from("ticket_comments")
     .select("*")
     .in("ticket_id", ticketIds)
+    .is("deleted_at", null)
     .order("created_at", { ascending: true });
 
   if (error) throw new Error(error.message);
@@ -77,17 +81,7 @@ export async function createTicket(
 
   if (error) throw new Error(error.message);
 
-  await insertAuditLog({
-    actorId: user.id,
-    actorName: user.name,
-    actorRole: user.role,
-    action: "TICKET_CREATED",
-    entityId: formatTicketId(data.id),
-    entityType: "Ticket",
-    oldValue: {},
-    newValue: { title: partial.title, priority: partial.priority, status: "OPEN" },
-  });
-
+  // Note: Audit log is automatically inserted via database trigger `trg_audit_ticket_changes`
   await loadUserDirectory();
   return mapTicket(data);
 }
@@ -118,17 +112,7 @@ export async function updateTicketStatus(
 
   if (error) return { error: error.message };
 
-  await insertAuditLog({
-    actorId: user.id,
-    actorName: user.name,
-    actorRole: user.role,
-    action: "STATUS_CHANGED",
-    entityId: formatTicketId(ticket.id),
-    entityType: "Ticket",
-    oldValue: { status: ticket.status },
-    newValue: { status: nextStatus },
-  });
-
+  // Note: Audit log is automatically inserted via database trigger `trg_audit_ticket_changes`
   await loadUserDirectory();
   return { ticket: mapTicket(data) };
 }
@@ -159,17 +143,7 @@ export async function updateTicketPriority(
 
   if (error) return { error: error.message };
 
-  await insertAuditLog({
-    actorId: user.id,
-    actorName: user.name,
-    actorRole: user.role,
-    action: "PRIORITY_UPDATED",
-    entityId: formatTicketId(ticket.id),
-    entityType: "Ticket",
-    oldValue: { priority: ticket.priority },
-    newValue: { priority },
-  });
-
+  // Note: Audit log is automatically inserted via database trigger `trg_audit_ticket_changes`
   await loadUserDirectory();
   return { ticket: mapTicket(data) };
 }
@@ -178,7 +152,7 @@ export async function assignTicketToAgent(
   admin: User,
   ticket: Ticket,
   agentId: string,
-  agentName: string,
+  _agentName: string,
 ): Promise<{ ticket?: Ticket; error?: string }> {
   if (admin.role !== "ADMIN") {
     return { error: "Only administrators can assign tickets." };
@@ -200,17 +174,7 @@ export async function assignTicketToAgent(
 
   if (error) return { error: error.message };
 
-  await insertAuditLog({
-    actorId: admin.id,
-    actorName: admin.name,
-    actorRole: admin.role,
-    action: "AGENT_ASSIGNED",
-    entityId: formatTicketId(ticket.id),
-    entityType: "Ticket",
-    oldValue: { assigned_agent_id: ticket.assignedAgentId ?? null },
-    newValue: { assigned_agent_id: agentId, assigned_agent: agentName },
-  });
-
+  // Note: Audit log is automatically inserted via database trigger `trg_audit_ticket_changes`
   await loadUserDirectory();
   return { ticket: mapTicket(data) };
 }
@@ -234,18 +198,26 @@ export async function addComment(
 
   if (error) throw new Error(error.message);
 
-  await insertAuditLog({
-    actorId: user.id,
-    actorName: user.name,
-    actorRole: user.role,
-    action: isInternal ? "INTERNAL_NOTE_ADDED" : "COMMENT_ADDED",
-    entityId: formatTicketId(ticketId),
-    entityType: "Ticket",
-    newValue: { content: content.slice(0, 120) },
-  });
-
+  // Note: Audit log is automatically inserted via database trigger `trg_audit_ticket_comments`
   await loadUserDirectory();
   return mapComment(data);
+}
+
+export async function softDeleteTicket(
+  user: User,
+  ticketId: string,
+): Promise<{ error?: string }> {
+  if (user.role !== "ADMIN") {
+    return { error: "Only administrators can delete tickets." };
+  }
+
+  const { error } = await supabase
+    .from("tickets")
+    .update({ deleted_at: new Date().toISOString() })
+    .eq("id", ticketId);
+
+  if (error) return { error: error.message };
+  return {};
 }
 
 export async function fetchAuditLogs(): Promise<import("../types").AuditLog[]> {

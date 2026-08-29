@@ -1,5 +1,5 @@
-import { useState } from "react";
-import type { ReactNode, LucideIcon } from "lucide-react";
+import { useState, type ReactNode } from "react";
+import type { LucideIcon } from "lucide-react";
 import { Shield, AlertCircle, Menu, X } from "lucide-react";
 import TopBar from "./TopBar";
 import type { User } from "../types";
@@ -44,22 +44,22 @@ export default function AppLayout({
   }, 0);
 
   return (
-    <div className="flex flex-col md:flex-row h-screen bg-zinc-950 overflow-hidden w-full">
+    <div className="flex flex-col md:flex-row h-screen bg-slate-50 overflow-hidden w-full">
       {/* 1. Mobile Header Bar */}
-      <div className="md:hidden flex items-center justify-between px-4 py-3 bg-zinc-900 border-b border-zinc-800 text-white w-full z-30 shrink-0">
+      <div className="md:hidden flex items-center justify-between px-4 py-3 bg-white border-b border-slate-200 text-white w-full z-30 shrink-0">
         <div className="flex items-center gap-2.5">
           <div className="w-7 h-7 rounded-lg bg-indigo-600 flex items-center justify-center shrink-0">
             <Shield className="w-4 h-4 text-white" />
           </div>
           <div>
-            <div className="text-xs font-bold text-zinc-50 tracking-tight">Service Desk</div>
-            <div className="text-[10px] text-zinc-500">{portalLabel}</div>
+            <div className="text-xs font-bold text-slate-900 tracking-tight">Service Desk</div>
+            <div className="text-[10px] text-slate-500">{portalLabel}</div>
           </div>
         </div>
         <button
           type="button"
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className="p-1.5 rounded-lg bg-zinc-800 text-zinc-300 hover:text-white focus:outline-none"
+          className="p-1.5 rounded-lg bg-slate-100 text-slate-700 hover:text-white focus:outline-none"
         >
           {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </button>
@@ -68,24 +68,24 @@ export default function AppLayout({
       {/* 2. Mobile Backdrop Overlay */}
       {isMobileMenuOpen && (
         <div
-          className="fixed inset-0 bg-zinc-950/80 backdrop-blur-sm z-40 md:hidden"
+          className="fixed inset-0 bg-slate-50/80 backdrop-blur-sm z-40 md:hidden"
           onClick={() => setIsMobileMenuOpen(false)}
         />
       )}
 
       {/* 3. Responsive Sidebar */}
       <aside
-        className={`fixed md:static inset-y-0 left-0 z-50 w-60 bg-zinc-900 border-r border-zinc-800 flex flex-col h-full transition-transform duration-200 ease-in-out md:transform-none ${
+        className={`fixed md:static inset-y-0 left-0 z-50 w-60 bg-white border-r border-slate-200 flex flex-col h-full transition-transform duration-200 ease-in-out md:transform-none ${
           isMobileMenuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         } ${isMobileMenuOpen ? "flex" : "hidden md:flex"}`}
       >
-        <div className="flex items-center gap-2.5 px-4 py-4 border-b border-zinc-800">
+        <div className="flex items-center gap-2.5 px-4 py-4 border-b border-slate-200">
           <div className="w-7 h-7 rounded-lg bg-indigo-600 flex items-center justify-center shrink-0">
             <Shield className="w-4 h-4 text-white" />
           </div>
           <div>
-            <div className="text-xs font-bold text-zinc-50 tracking-tight">Service Desk</div>
-            <div className="text-[10px] text-zinc-500">{portalLabel}</div>
+            <div className="text-xs font-bold text-slate-900 tracking-tight">Service Desk</div>
+            <div className="text-[10px] text-slate-500">{portalLabel}</div>
           </div>
         </div>
 
@@ -103,8 +103,8 @@ export default function AppLayout({
                 }}
                 className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-all duration-150 text-left ${
                   isActive
-                    ? "bg-indigo-600/20 text-indigo-300 font-medium"
-                    : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/70"
+                    ? "bg-indigo-50 text-indigo-700 font-medium"
+                    : "text-slate-600 hover:text-slate-800 hover:bg-slate-100/70"
                 }`}
               >
                 <Icon className="w-4 h-4 shrink-0" />
@@ -112,7 +112,7 @@ export default function AppLayout({
                 {item.badge !== undefined && (
                   <span
                     className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
-                      isActive ? "bg-indigo-600 text-white" : "bg-zinc-700 text-zinc-300"
+                      isActive ? "bg-indigo-600 text-white" : "bg-slate-200 text-slate-700"
                     }`}
                   >
                     {item.badge}
@@ -128,15 +128,15 @@ export default function AppLayout({
       <div className="flex-1 min-w-0 flex flex-col overflow-hidden w-full">
         <TopBar user={user} title={title} onLogout={onLogout} notificationCount={notifCount} />
         {error && (
-          <div className="px-4 md:px-6 py-2 bg-red-950/40 border-b border-red-900 flex items-center gap-2 text-xs text-red-300 shrink-0">
+          <div className="px-4 md:px-6 py-2 bg-red-50 border-b border-red-200 flex items-center gap-2 text-xs text-red-300 shrink-0">
             <AlertCircle className="w-3.5 h-3.5 shrink-0" />
             <span className="break-words">{error}</span>
           </div>
         )}
-        <main className="flex-1 overflow-y-auto bg-zinc-950 relative min-w-0 p-3 sm:p-6">
+        <main className="flex-1 overflow-y-auto bg-slate-50 relative min-w-0 p-3 sm:p-6">
           {loading && (
-            <div className="absolute inset-0 bg-zinc-950/60 backdrop-blur-[1px] z-10 flex items-center justify-center">
-              <span className="w-6 h-6 border-2 border-zinc-600 border-t-indigo-500 rounded-full animate-spin" />
+            <div className="absolute inset-0 bg-slate-50/60 backdrop-blur-[1px] z-10 flex items-center justify-center">
+              <span className="w-6 h-6 border-2 border-slate-300 border-t-indigo-500 rounded-full animate-spin" />
             </div>
           )}
           {children}

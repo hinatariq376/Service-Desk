@@ -1,1 +1,1 @@
-export { useTickets, useTicketStore, TicketProvider } from "./context/TicketContext";
+export { useTickets, useTicketStore, TicketProvider } from "../context/TicketContext";

@@ -21,19 +21,19 @@ export default function Sidebar({ items, title }: SidebarProps) {
   return (
     <>
       {/* 1. Mobile Header Bar */}
-      <div className="md:hidden flex items-center justify-between px-4 py-3 bg-slate-900 border-b border-slate-800 text-white w-full sticky top-0 z-40">
+      <div className="md:hidden flex items-center justify-between px-4 py-3 bg-white border-b border-slate-200 text-slate-900 w-full sticky top-0 z-40 shadow-sm">
         <div className="flex items-center gap-2.5">
           <div className="w-7 h-7 rounded-lg bg-indigo-600 flex items-center justify-center shrink-0">
             <Shield className="w-4 h-4 text-white" />
           </div>
           <div>
-            <div className="text-xs font-bold text-white tracking-tight">Service Desk</div>
-            {title && <div className="text-[10px] text-slate-500">{title}</div>}
+            <div className="text-xs font-bold text-slate-900 tracking-tight">Service Desk</div>
+            {title && <div className="text-[10px] text-slate-600">{title}</div>}
           </div>
         </div>
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="p-1.5 rounded-lg bg-slate-800 text-slate-300 hover:text-white"
+          className="p-1.5 rounded-lg bg-slate-100 text-slate-700 hover:text-slate-900"
         >
           {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </button>
@@ -42,24 +42,24 @@ export default function Sidebar({ items, title }: SidebarProps) {
       {/* 2. Mobile Backdrop (Overlay) */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-40 md:hidden"
+          className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 md:hidden"
           onClick={() => setIsOpen(false)}
         />
       )}
 
       {/* 3. Sidebar Container (Desktop Sidebar + Mobile Drawer) */}
       <aside
-        className={`fixed md:static inset-y-0 left-0 z-50 w-64 bg-slate-900 border-r border-slate-800 flex flex-col h-full transform transition-transform duration-200 ease-in-out md:transform-none ${
+        className={`fixed md:static inset-y-0 left-0 z-50 w-64 bg-white border-r border-slate-200 flex flex-col h-full transform transition-transform duration-200 ease-in-out md:transform-none ${
           isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
-        } ${isOpen ? "flex" : "hidden md:flex"}`}
+        } ${isOpen ? "flex" : "hidden md:flex"} shadow-lg md:shadow-none`}
       >
-        <div className="flex items-center gap-2.5 px-4 py-4 border-b border-slate-800">
+        <div className="flex items-center gap-2.5 px-4 py-4 border-b border-slate-200">
           <div className="w-7 h-7 rounded-lg bg-indigo-600 flex items-center justify-center shrink-0">
             <Shield className="w-4 h-4 text-white" />
           </div>
           <div>
-            <div className="text-xs font-bold text-white tracking-tight">Service Desk</div>
-            {title && <div className="text-[10px] text-slate-500">{title}</div>}
+            <div className="text-xs font-bold text-slate-900 tracking-tight">Service Desk</div>
+            {title && <div className="text-[10px] text-slate-600">{title}</div>}
           </div>
         </div>
 
@@ -75,8 +75,8 @@ export default function Sidebar({ items, title }: SidebarProps) {
                 }}
                 className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-all duration-150 text-left ${
                   item.active
-                    ? "bg-indigo-600/20 text-indigo-300 font-medium"
-                    : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/70"
+                    ? "bg-indigo-50 text-indigo-700 font-medium"
+                    : "text-slate-700 hover:text-slate-900 hover:bg-slate-100"
                 }`}
               >
                 <Icon className="w-4 h-4 shrink-0" />
@@ -84,7 +84,7 @@ export default function Sidebar({ items, title }: SidebarProps) {
                 {item.badge !== undefined && (
                   <span
                     className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
-                      item.active ? "bg-indigo-600 text-white" : "bg-slate-700 text-slate-300"
+                      item.active ? "bg-indigo-600 text-white" : "bg-slate-200 text-slate-700"
                     }`}
                   >
                     {item.badge}

@@ -37,16 +37,16 @@ export default function SLATimer({ deadline, breach, size = "sm" }: SLATimerProp
             ? "bg-red-950 border-red-800"
             : isWarning
               ? "bg-amber-950 border-amber-700"
-              : "bg-slate-900 border-slate-700"
+              : "bg-slate-50 border-slate-200"
         }`}
       >
         <div className="flex items-center gap-2 mb-2">
           {isBreached ? (
             <AlertTriangle className="w-4 h-4 text-red-400 animate-sla-pulse" />
           ) : (
-            <Clock className="w-4 h-4 text-slate-400" />
+            <Clock className="w-4 h-4 text-slate-600" />
           )}
-          <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+          <span className="text-xs font-semibold uppercase tracking-wider text-slate-600">
             {isBreached ? "SLA BREACHED" : "Critical Resolution SLA"}
           </span>
         </div>

@@ -57,8 +57,8 @@ export default function AuditLogs({ logs, onRefresh, isRefreshing }: AuditLogsPr
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-fade-up">
         <div>
-          <h2 className="text-base sm:text-lg font-bold text-zinc-50">Audit Trail</h2>
-          <p className="text-xs text-zinc-500 mt-0.5">
+          <h2 className="text-base sm:text-lg font-bold text-slate-50">Audit Trail</h2>
+          <p className="text-xs text-slate-500 mt-0.5">
             Immutable event log — every actor action recorded with timestamp and diff
           </p>
         </div>
@@ -68,7 +68,7 @@ export default function AuditLogs({ logs, onRefresh, isRefreshing }: AuditLogsPr
               type="button"
               onClick={onRefresh}
               disabled={isRefreshing}
-              className="self-start sm:self-auto inline-flex items-center gap-1.5 text-xs text-zinc-400 border border-zinc-700 rounded-lg px-3 py-2 hover:border-zinc-600 hover:text-zinc-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="self-start sm:self-auto inline-flex items-center gap-1.5 text-xs text-slate-400 border border-slate-600 rounded-lg px-3 py-2 hover:border-slate-500 hover:text-slate-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
               {isRefreshing ? 'Refreshing...' : 'Refresh'}
@@ -76,7 +76,7 @@ export default function AuditLogs({ logs, onRefresh, isRefreshing }: AuditLogsPr
           )}
           <button
             type="button"
-            className="self-start sm:self-auto inline-flex items-center gap-1.5 text-xs text-zinc-400 border border-zinc-700 rounded-lg px-3 py-2 hover:border-zinc-600 hover:text-zinc-200 transition-colors"
+            className="self-start sm:self-auto inline-flex items-center gap-1.5 text-xs text-slate-400 border border-slate-600 rounded-lg px-3 py-2 hover:border-slate-500 hover:text-slate-200 transition-colors"
           >
             <Download className="w-3.5 h-3.5" />
             Export CSV
@@ -91,9 +91,9 @@ export default function AuditLogs({ logs, onRefresh, isRefreshing }: AuditLogsPr
           { label: "SLA Breach Events", value: logs.filter((l) => l.action === "SLA_BREACHED").length },
           { label: "Status Changes", value: logs.filter((l) => l.action === "STATUS_CHANGED").length },
         ].map((s) => (
-          <div key={s.label} className="bg-zinc-900 border border-zinc-800 rounded-xl p-3.5 sm:p-4">
-            <div className="text-xs text-zinc-500 mb-1">{s.label}</div>
-            <div className="text-xl sm:text-2xl font-bold text-zinc-100">{s.value}</div>
+          <div key={s.label} className="bg-slate-800 border border-slate-700 rounded-xl p-3.5 sm:p-4">
+            <div className="text-xs text-slate-500 mb-1">{s.label}</div>
+            <div className="text-xl sm:text-2xl font-bold text-slate-100">{s.value}</div>
           </div>
         ))}
       </div>
@@ -101,18 +101,18 @@ export default function AuditLogs({ logs, onRefresh, isRefreshing }: AuditLogsPr
       {/* Filters */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 animate-fade-up" style={{ animationDelay: "80ms" }}>
         <div className="relative flex-1 sm:max-w-xs">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-500" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search actor, entity, action…"
-            className="w-full bg-zinc-800 border border-zinc-700 rounded-lg pl-9 pr-3.5 py-2 text-xs sm:text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+            className="w-full bg-slate-700 border border-slate-600 rounded-lg pl-9 pr-3.5 py-2 text-xs sm:text-sm text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
           />
         </div>
         <select
           value={actionFilter}
           onChange={(e) => setActionFilter(e.target.value)}
-          className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-xs sm:text-sm text-zinc-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-xs sm:text-sm text-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
         >
           {actions.map((a) => (
             <option key={a} value={a}>
@@ -120,7 +120,7 @@ export default function AuditLogs({ logs, onRefresh, isRefreshing }: AuditLogsPr
             </option>
           ))}
         </select>
-        <span className="text-xs text-zinc-500 sm:ml-auto">{filtered.length} events</span>
+        <span className="text-xs text-slate-500 sm:ml-auto">{filtered.length} events</span>
       </div>
 
       {/* Log Entries */}
@@ -128,12 +128,12 @@ export default function AuditLogs({ logs, onRefresh, isRefreshing }: AuditLogsPr
         {filtered.map((log, i) => (
           <div
             key={log.id}
-            className="bg-zinc-900 border border-zinc-800 rounded-xl hover:border-zinc-700 transition-all cursor-pointer"
+            className="bg-slate-800 border border-slate-700 rounded-xl hover:border-slate-600 transition-all cursor-pointer"
             onClick={() => setExpandedId(expandedId === log.id ? null : log.id)}
           >
             <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4 p-3.5 sm:p-4">
               <div className="flex items-center justify-between md:justify-start gap-3 shrink-0">
-                <span className="font-mono text-[10px] text-zinc-500 md:w-36 shrink-0">
+                <span className="font-mono text-[10px] text-slate-500 md:w-36 shrink-0">
                   {new Date(log.timestamp).toISOString().replace("T", " ").slice(0, 19)} UTC
                 </span>
                 <div className="flex items-center gap-1.5 md:w-36 shrink-0">
@@ -148,8 +148,8 @@ export default function AuditLogs({ logs, onRefresh, isRefreshing }: AuditLogsPr
                       .join("")}
                   </div>
                   <div className="min-w-0">
-                    <div className="text-xs font-medium text-zinc-200 truncate leading-none">{log.actorName}</div>
-                    <div className="text-[9px] text-zinc-500 mt-0.5">{log.actorRole.replace("_", " ")}</div>
+                    <div className="text-xs font-medium text-slate-200 truncate leading-none">{log.actorName}</div>
+                    <div className="text-[9px] text-slate-500 mt-0.5">{log.actorRole.replace("_", " ")}</div>
                   </div>
                 </div>
               </div>
@@ -157,7 +157,7 @@ export default function AuditLogs({ logs, onRefresh, isRefreshing }: AuditLogsPr
               <div className="flex items-center gap-2 flex-wrap md:flex-nowrap flex-1 min-w-0">
                 <span
                   className={`font-mono text-[10px] font-bold px-2 py-0.5 rounded border shrink-0 ${
-                    ACTION_STYLES[log.action] || "text-zinc-400 bg-zinc-800 border-zinc-700"
+                    ACTION_STYLES[log.action] || "text-slate-400 bg-slate-700 border-slate-600"
                   }`}
                 >
                   {log.action}
@@ -169,35 +169,35 @@ export default function AuditLogs({ logs, onRefresh, isRefreshing }: AuditLogsPr
               </div>
 
               <ChevronDown
-                className={`w-3.5 h-3.5 text-zinc-500 shrink-0 self-end md:self-center transition-transform ${
+                className={`w-3.5 h-3.5 text-slate-500 shrink-0 self-end md:self-center transition-transform ${
                   expandedId === log.id ? "rotate-180" : ""
                 }`}
               />
             </div>
 
             {expandedId === log.id && (
-              <div className="border-t border-zinc-800 p-3.5 sm:p-4 bg-zinc-800/30 rounded-b-xl">
+              <div className="border-t border-slate-700 p-3.5 sm:p-4 bg-slate-700/30 rounded-b-xl">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                   <div>
-                    <div className="text-zinc-500 font-semibold uppercase tracking-wider text-[10px] mb-1.5 flex items-center gap-1">
+                    <div className="text-slate-500 font-semibold uppercase tracking-wider text-[10px] mb-1.5 flex items-center gap-1">
                       <Info className="w-3 h-3" />
                       Entity Details
                     </div>
-                    <div className="space-y-1 text-zinc-300">
+                    <div className="space-y-1 text-slate-300">
                       <div>
                         ID: <span className="font-mono text-indigo-400">{log.entityId}</span>
                       </div>
                       <div>
-                        Type: <span className="text-zinc-200">{log.entityType}</span>
+                        Type: <span className="text-slate-200">{log.entityType}</span>
                       </div>
                       <div>
-                        Actor: <span className="text-zinc-200">{log.actorName}</span>
+                        Actor: <span className="text-slate-200">{log.actorName}</span>
                       </div>
                     </div>
                   </div>
                   <div>
-                    <div className="text-zinc-500 font-semibold uppercase tracking-wider text-[10px] mb-1.5">Full Diff</div>
-                    <pre className="font-mono text-[10px] text-zinc-400 bg-zinc-950 rounded-lg p-2.5 overflow-auto max-h-32 border border-zinc-800">
+                    <div className="text-slate-500 font-semibold uppercase tracking-wider text-[10px] mb-1.5">Full Diff</div>
+                    <pre className="font-mono text-[10px] text-slate-400 bg-slate-900 rounded-lg p-2.5 overflow-auto max-h-32 border border-slate-700">
                       {JSON.stringify({ before: log.oldValue, after: log.newValue }, null, 2)}
                     </pre>
                   </div>
@@ -208,8 +208,8 @@ export default function AuditLogs({ logs, onRefresh, isRefreshing }: AuditLogsPr
         ))}
 
         {filtered.length === 0 && (
-          <div className="py-12 text-center bg-zinc-900 border border-zinc-800 rounded-xl">
-            <p className="text-zinc-500 text-xs sm:text-sm">No events match the search criteria.</p>
+          <div className="py-12 text-center bg-slate-800 border border-slate-700 rounded-xl">
+            <p className="text-slate-500 text-xs sm:text-sm">No events match the search criteria.</p>
           </div>
         )}
       </div>

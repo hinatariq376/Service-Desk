@@ -79,12 +79,12 @@ export default function AgentQueue() {
       <div className="flex h-full overflow-hidden w-full relative" style={{ height: "calc(100vh - 56px)" }}>
         {/* Ticket List Column (Full width on mobile, 80 on desktop) */}
         <div
-          className={`w-full md:w-80 shrink-0 border-r border-zinc-800 flex flex-col overflow-hidden bg-zinc-900/40 ${
+          className={`w-full md:w-80 shrink-0 border-r border-slate-700 flex flex-col overflow-hidden bg-slate-800/40 ${
             selectedId ? "hidden md:flex" : "flex"
           }`}
         >
-          <div className="px-4 py-3 border-b border-zinc-800 shrink-0">
-            <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">
+          <div className="px-4 py-3 border-b border-slate-700 shrink-0">
+            <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
               {listTickets.length} ticket{listTickets.length !== 1 ? "s" : ""} — strict assignment isolation
             </div>
           </div>
@@ -103,7 +103,7 @@ export default function AgentQueue() {
           {selectedTicket ? (
             <div className="flex flex-col h-full w-full min-w-0">
               {/* Back button header on mobile */}
-              <div className="md:hidden px-4 py-2.5 border-b border-zinc-800 bg-zinc-950 flex items-center shrink-0">
+              <div className="md:hidden px-4 py-2.5 border-b border-slate-700 bg-slate-900 flex items-center shrink-0">
                 <button
                   onClick={() => setSelectedId(null)}
                   className="inline-flex items-center gap-1.5 text-xs text-indigo-400 font-semibold hover:text-indigo-300 transition-colors"
@@ -123,10 +123,10 @@ export default function AgentQueue() {
             </div>
           ) : (
             <div className="flex items-center justify-center h-full flex-col gap-3 p-6 text-center">
-              <div className="w-12 h-12 rounded-2xl bg-zinc-800 flex items-center justify-center">
-                <UserCheck className="w-5 h-5 text-zinc-600" />
+              <div className="w-12 h-12 rounded-2xl bg-slate-700 flex items-center justify-center">
+                <UserCheck className="w-5 h-5 text-slate-600" />
               </div>
-              <p className="text-sm text-zinc-500">Select an assigned ticket to view details</p>
+              <p className="text-sm text-slate-500">Select an assigned ticket to view details</p>
             </div>
           )}
         </div>

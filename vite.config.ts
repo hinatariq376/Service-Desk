@@ -57,7 +57,7 @@ export default defineConfig(({ mode }) => {
       globals: true,
 
       // Glob patterns for test files.
-      include: ['src/**/*.test.ts', 'src/**/*.spec.ts'],
+      include: ['src/**/*.test.ts', 'src/**/*.spec.ts', 'tests/**/*.test.ts', 'tests/**/*.spec.ts'],
 
       // Always print a verbose per-test result in CI / terminal.
       reporters: ['verbose'],

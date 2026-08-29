@@ -83,8 +83,8 @@ export default function OverviewAnalytics({ tickets }: OverviewAnalyticsProps) {
       {/* Header */}
       <div className="flex items-center justify-between animate-fade-up">
         <div>
-          <h2 className="text-base sm:text-lg font-bold text-zinc-50">Overview Analytics</h2>
-          <p className="text-xs text-zinc-500 mt-0.5 flex items-center gap-1.5">
+          <h2 className="text-base sm:text-lg font-bold text-slate-50">Overview Analytics</h2>
+          <p className="text-xs text-slate-500 mt-0.5 flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse inline-block" />
             Live — synced from Supabase PostgreSQL
           </p>
@@ -99,16 +99,16 @@ export default function OverviewAnalytics({ tickets }: OverviewAnalyticsProps) {
           { label: "SLA Breach Rate", value: `${breachRate}%`, icon: Clock, trend: `${breached} breached`, up: breached > 0, color: "red", sub: "Resolution SLA" },
           { label: "In Progress", value: inProgress.toLocaleString(), icon: Activity, trend: "Active work", up: false, color: "emerald", sub: "Agent queue" },
         ].map((kpi) => (
-          <div key={kpi.label} className="bg-zinc-900 border border-zinc-800 rounded-xl p-3.5 sm:p-4 hover:border-zinc-700 transition-colors">
+          <div key={kpi.label} className="bg-slate-800 border border-slate-700 rounded-xl p-3.5 sm:p-4 hover:border-slate-600 transition-colors">
             <div className="flex items-center justify-between mb-2 sm:mb-3">
-              <span className="text-[11px] sm:text-xs font-semibold text-zinc-500 uppercase tracking-wider">{kpi.label}</span>
-              <kpi.icon className={`w-4 h-4 ${KPI_COLOR_MAP[kpi.color] ?? "text-zinc-400"}`} />
+              <span className="text-[11px] sm:text-xs font-semibold text-slate-500 uppercase tracking-wider">{kpi.label}</span>
+              <kpi.icon className={`w-4 h-4 ${KPI_COLOR_MAP[kpi.color] ?? "text-slate-400"}`} />
             </div>
-            <div className="text-xl sm:text-2xl font-bold text-zinc-50 tabular-nums">{kpi.value}</div>
+            <div className="text-xl sm:text-2xl font-bold text-slate-50 tabular-nums">{kpi.value}</div>
             <div className={`flex items-center gap-1 mt-1 text-xs font-medium ${kpi.up ? "text-red-400" : "text-emerald-400"}`}>
               {kpi.up ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
               {kpi.trend}
-              <span className="text-zinc-600 ml-1 truncate">{kpi.sub}</span>
+              <span className="text-slate-600 ml-1 truncate">{kpi.sub}</span>
             </div>
           </div>
         ))}
@@ -117,9 +117,9 @@ export default function OverviewAnalytics({ tickets }: OverviewAnalyticsProps) {
       {/* Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 animate-fade-up" style={{ animationDelay: "80ms" }}>
         {/* Priority Bar Chart */}
-        <div className="lg:col-span-3 bg-zinc-900 border border-zinc-800 rounded-xl p-4 sm:p-5 min-w-0">
-          <h3 className="text-xs sm:text-sm font-semibold text-zinc-50 mb-0.5">Tickets by Priority</h3>
-          <p className="text-xs text-zinc-500 mb-4">Current distribution</p>
+        <div className="lg:col-span-3 bg-slate-800 border border-slate-700 rounded-xl p-4 sm:p-5 min-w-0">
+          <h3 className="text-xs sm:text-sm font-semibold text-slate-50 mb-0.5">Tickets by Priority</h3>
+          <p className="text-xs text-slate-500 mb-4">Current distribution</p>
           <div className="w-full h-[200px] sm:h-[220px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={priorityData} barCategoryGap="25%">
@@ -138,10 +138,10 @@ export default function OverviewAnalytics({ tickets }: OverviewAnalyticsProps) {
         </div>
 
         {/* Status Pie Chart */}
-        <div className="lg:col-span-2 bg-zinc-900 border border-zinc-800 rounded-xl p-4 sm:p-5 min-w-0 flex flex-col justify-between">
+        <div className="lg:col-span-2 bg-slate-800 border border-slate-700 rounded-xl p-4 sm:p-5 min-w-0 flex flex-col justify-between">
           <div>
-            <h3 className="text-xs sm:text-sm font-semibold text-zinc-50 mb-0.5">By Status</h3>
-            <p className="text-xs text-zinc-500 mb-2">Current snapshot</p>
+            <h3 className="text-xs sm:text-sm font-semibold text-slate-50 mb-0.5">By Status</h3>
+            <p className="text-xs text-slate-500 mb-2">Current snapshot</p>
             <div className="w-full h-[160px] sm:h-[180px]">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -156,12 +156,12 @@ export default function OverviewAnalytics({ tickets }: OverviewAnalyticsProps) {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 gap-1.5 mt-2 pt-2 border-t border-zinc-800/60">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 gap-1.5 mt-2 pt-2 border-t border-slate-700/60">
             {statusData.map((d) => (
               <div key={d.name} className="flex items-center gap-1.5 text-xs min-w-0">
                 <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: d.fill }} />
-                <span className="text-zinc-400 truncate text-[11px]">{d.name}</span>
-                <span className="text-zinc-500 ml-auto font-mono text-[10px] shrink-0">{d.value}</span>
+                <span className="text-slate-400 truncate text-[11px]">{d.name}</span>
+                <span className="text-slate-500 ml-auto font-mono text-[10px] shrink-0">{d.value}</span>
               </div>
             ))}
           </div>

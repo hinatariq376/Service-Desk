@@ -96,11 +96,11 @@ export default function CustomerDashboard() {
         {page === "profile" && <ProfilePage user={user} />}
         {page === "detail" && selectedTicket && (
           <div className="h-full flex flex-col" style={{ height: "calc(100vh - 56px)" }}>
-            <div className="px-6 py-3 border-b border-zinc-800">
+            <div className="px-6 py-3 border-b border-slate-700">
               <button
                 type="button"
                 onClick={() => setPage("tickets")}
-                className="inline-flex items-center gap-1.5 text-xs text-zinc-400 hover:text-zinc-200 transition-colors"
+                className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-200 transition-colors"
               >
                 <ArrowLeft className="w-3.5 h-3.5" />
                 Back to My Tickets

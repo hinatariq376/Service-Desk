@@ -11,6 +11,7 @@ export interface Database {
           role: "CUSTOMER" | "SUPPORT_AGENT" | "ADMIN";
           avatar: string | null;
           created_at: string;
+          updated_at?: string;
         };
         Insert: {
           id: string;
@@ -19,8 +20,18 @@ export interface Database {
           role: "CUSTOMER" | "SUPPORT_AGENT" | "ADMIN";
           avatar?: string | null;
           created_at?: string;
+          updated_at?: string;
         };
-        Update: Partial<Database["public"]["Tables"]["users"]["Insert"]>;
+        Update: {
+          id?: string;
+          name?: string;
+          email?: string;
+          role?: "CUSTOMER" | "SUPPORT_AGENT" | "ADMIN";
+          avatar?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
       };
       tickets: {
         Row: {
@@ -40,6 +51,7 @@ export interface Database {
           sla_breach: boolean;
           attachments: Json | null;
           tags: string[] | null;
+          deleted_at: string | null;
         };
         Insert: {
           id?: string;
@@ -58,8 +70,28 @@ export interface Database {
           sla_breach?: boolean;
           attachments?: Json | null;
           tags?: string[] | null;
+          deleted_at?: string | null;
         };
-        Update: Partial<Database["public"]["Tables"]["tickets"]["Insert"]>;
+        Update: {
+          id?: string;
+          title?: string;
+          description?: string;
+          category?: string;
+          priority?: "CRITICAL" | "HIGH" | "MEDIUM" | "LOW";
+          status?: string;
+          customer_id?: string;
+          assigned_agent_id?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          sla_response_deadline?: string | null;
+          sla_resolution_deadline?: string | null;
+          sla_deadline?: string | null;
+          sla_breach?: boolean;
+          attachments?: Json | null;
+          tags?: string[] | null;
+          deleted_at?: string | null;
+        };
+        Relationships: [];
       };
       ticket_comments: {
         Row: {
@@ -69,6 +101,7 @@ export interface Database {
           content: string;
           is_internal: boolean;
           created_at: string;
+          deleted_at: string | null;
         };
         Insert: {
           id?: string;
@@ -77,8 +110,18 @@ export interface Database {
           content: string;
           is_internal?: boolean;
           created_at?: string;
+          deleted_at?: string | null;
         };
-        Update: Partial<Database["public"]["Tables"]["ticket_comments"]["Insert"]>;
+        Update: {
+          id?: string;
+          ticket_id?: string;
+          author_id?: string;
+          content?: string;
+          is_internal?: boolean;
+          created_at?: string;
+          deleted_at?: string | null;
+        };
+        Relationships: [];
       };
       audit_logs: {
         Row: {
@@ -105,8 +148,32 @@ export interface Database {
           old_value?: Json | null;
           new_value?: Json | null;
         };
-        Update: Partial<Database["public"]["Tables"]["audit_logs"]["Insert"]>;
+        Update: {
+          id?: string;
+          created_at?: string;
+          actor_id?: string | null;
+          actor_name?: string;
+          actor_role?: string;
+          action?: string;
+          entity_id?: string;
+          entity_type?: string;
+          old_value?: Json | null;
+          new_value?: Json | null;
+        };
+        Relationships: [];
       };
+    };
+    Views: {
+      [_ in never]: never;
+    };
+    Functions: {
+      [_ in never]: never;
+    };
+    Enums: {
+      [_ in never]: never;
+    };
+    CompositeTypes: {
+      [_ in never]: never;
     };
   };
 }

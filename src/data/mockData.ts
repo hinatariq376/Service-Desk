@@ -14,6 +14,7 @@ const ts = (offsetMinutes: number) =>
 export const MOCK_TICKETS: Ticket[] = [
   {
     id: "TCK-80491",
+    displayId: "TCK-80491",
     title: "Production API returning 500 errors intermittently",
     description:
       "Our production environment is experiencing intermittent 500 errors on the /api/v2/orders endpoint. This started around 09:00 UTC and is affecting roughly 15% of requests. Logs show timeout errors in the database layer.",
@@ -32,6 +33,7 @@ export const MOCK_TICKETS: Ticket[] = [
   },
   {
     id: "TCK-80390",
+    displayId: "TCK-80390",
     title: "Password reset email not delivering",
     description:
       "Users are reporting that password reset emails are not being received. Checked spam folders — not there either.",
@@ -50,6 +52,7 @@ export const MOCK_TICKETS: Ticket[] = [
   },
   {
     id: "TCK-80322",
+    displayId: "TCK-80322",
     title: "Dashboard analytics widget not loading",
     description: "The analytics chart widget on the main dashboard shows a blank state. Console shows a CORS error.",
     category: "UI Bug",
@@ -65,6 +68,7 @@ export const MOCK_TICKETS: Ticket[] = [
   },
   {
     id: "TCK-80288",
+    displayId: "TCK-80288",
     title: "CSV export truncating records over 10,000 rows",
     description: "When exporting reports with more than 10k rows, the CSV file is cut off at exactly 10,000 records.",
     category: "Data Export",
@@ -79,6 +83,7 @@ export const MOCK_TICKETS: Ticket[] = [
   },
   {
     id: "TCK-80201",
+    displayId: "TCK-80201",
     title: "SSO integration failing with Azure AD",
     description:
       "SAML-based SSO configured with Azure Active Directory is returning assertion validation errors after a tenant policy change.",
@@ -95,6 +100,7 @@ export const MOCK_TICKETS: Ticket[] = [
   },
   {
     id: "TCK-80155",
+    displayId: "TCK-80155",
     title: "Billing invoice PDF showing incorrect tax",
     description: "January invoice shows 0% tax but our account is registered in a VAT-applicable region.",
     category: "Billing",
@@ -109,6 +115,7 @@ export const MOCK_TICKETS: Ticket[] = [
   },
   {
     id: "TCK-80099",
+    displayId: "TCK-80099",
     title: "Webhook endpoint not firing on order completion",
     description: "Configured webhook for order.completed events is not triggering despite successful orders.",
     category: "Integrations",

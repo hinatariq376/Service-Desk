@@ -71,7 +71,7 @@ export default function AllSystemTickets({ tickets }: AllSystemTicketsProps) {
     <button
       type="button"
       onClick={() => handleSort(k)}
-      className="inline-flex items-center gap-1 text-[10px] font-bold text-zinc-500 uppercase tracking-wider hover:text-zinc-300 transition-colors"
+      className="inline-flex items-center gap-1 text-[10px] font-bold text-slate-500 uppercase tracking-wider hover:text-slate-300 transition-colors"
     >
       {label}
       <ArrowUpDown className={`w-3 h-3 ${sortKey === k ? "text-indigo-400" : ""}`} />
@@ -83,8 +83,8 @@ export default function AllSystemTickets({ tickets }: AllSystemTicketsProps) {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-fade-up">
         <div>
-          <h2 className="text-base sm:text-lg font-bold text-zinc-50">All System Tickets</h2>
-          <p className="text-xs text-zinc-500 mt-0.5 flex items-center gap-1.5">
+          <h2 className="text-base sm:text-lg font-bold text-slate-50">All System Tickets</h2>
+          <p className="text-xs text-slate-500 mt-0.5 flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse inline-block" />
             {tickets.length.toLocaleString()} tickets — live via Supabase Realtime
           </p>
@@ -93,13 +93,13 @@ export default function AllSystemTickets({ tickets }: AllSystemTicketsProps) {
           <button
             type="button"
             onClick={() => refresh()}
-            className="w-8 h-8 rounded-lg flex items-center justify-center text-zinc-400 hover:text-white hover:bg-zinc-800 border border-zinc-700 transition-all"
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700 border border-slate-600 transition-all"
           >
             <RefreshCw className="w-3.5 h-3.5" />
           </button>
           <button
             type="button"
-            className="inline-flex items-center gap-1.5 text-xs text-zinc-400 border border-zinc-700 rounded-lg px-3 py-2 hover:border-zinc-600 transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs text-slate-400 border border-slate-600 rounded-lg px-3 py-2 hover:border-slate-500 transition-colors"
           >
             <Filter className="w-3.5 h-3.5" />
             Export
@@ -112,19 +112,19 @@ export default function AllSystemTickets({ tickets }: AllSystemTicketsProps) {
       {/* Controls & Filters */}
       <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3 animate-fade-up" style={{ animationDelay: "40ms" }}>
         <div className="relative flex-1 sm:flex-initial">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-500" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search tickets…"
-            className="w-full sm:w-60 bg-zinc-800 border border-zinc-700 rounded-lg pl-9 pr-3.5 py-2 text-xs sm:text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+            className="w-full sm:w-60 bg-slate-700 border border-slate-600 rounded-lg pl-9 pr-3.5 py-2 text-xs sm:text-sm text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
           />
         </div>
         <div className="grid grid-cols-2 sm:flex sm:items-center gap-2.5">
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as TicketStatus | "ALL")}
-            className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-xs sm:text-sm text-zinc-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-xs sm:text-sm text-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
           >
             <option value="ALL">All Statuses</option>
             {["OPEN", "TRIAGED", "ASSIGNED", "IN_PROGRESS", "WAITING_FOR_CUSTOMER", "RESOLVED", "CLOSED"].map((s) => (
@@ -136,7 +136,7 @@ export default function AllSystemTickets({ tickets }: AllSystemTicketsProps) {
           <select
             value={priorityFilter}
             onChange={(e) => setPriorityFilter(e.target.value as Priority | "ALL")}
-            className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-xs sm:text-sm text-zinc-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-xs sm:text-sm text-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
           >
             <option value="ALL">All Priorities</option>
             {["CRITICAL", "HIGH", "MEDIUM", "LOW"].map((p) => (
@@ -146,42 +146,42 @@ export default function AllSystemTickets({ tickets }: AllSystemTicketsProps) {
             ))}
           </select>
         </div>
-        <span className="text-xs text-zinc-500 sm:ml-auto">{filtered.length} results</span>
+        <span className="text-xs text-slate-500 sm:ml-auto">{filtered.length} results</span>
       </div>
 
       {/* Tickets Table */}
-      <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden animate-fade-up" style={{ animationDelay: "80ms" }}>
+      <div className="bg-slate-800 border border-slate-700 rounded-xl overflow-hidden animate-fade-up" style={{ animationDelay: "80ms" }}>
         <div className="overflow-x-auto min-w-0">
           <table className="w-full text-left min-w-[750px]">
             <thead>
-              <tr className="border-b border-zinc-800">
+              <tr className="border-b border-slate-700">
                 <th className="px-4 py-3">
                   <SortBtn k="id" label="Ticket ID" />
                 </th>
-                <th className="px-4 py-3 text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Title</th>
+                <th className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Title</th>
                 <th className="px-4 py-3">
                   <SortBtn k="priority" label="Priority" />
                 </th>
                 <th className="px-4 py-3">
                   <SortBtn k="status" label="Status" />
                 </th>
-                <th className="px-4 py-3 text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Customer</th>
-                <th className="px-4 py-3 text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Assign Agent</th>
-                <th className="px-4 py-3 text-[10px] font-bold text-zinc-500 uppercase tracking-wider">SLA</th>
+                <th className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Customer</th>
+                <th className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Assign Agent</th>
+                <th className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider">SLA</th>
                 <th className="px-4 py-3">
                   <SortBtn k="createdAt" label="Created" />
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-800/60">
+            <tbody className="divide-y divide-slate-700/60">
               {filtered.map((t, i) => (
-                <tr key={t.id} className="hover:bg-zinc-800/20 transition-colors group animate-fade-up" style={{ animationDelay: `${i * 20}ms` }}>
+                <tr key={t.id} className="hover:bg-slate-700/20 transition-colors group animate-fade-up" style={{ animationDelay: `${i * 20}ms` }}>
                   <td className="px-4 py-3">
                     <span className="font-mono text-xs font-semibold text-indigo-400">{t.displayId}</span>
                   </td>
                   <td className="px-4 py-3 max-w-xs">
-                    <div className="text-xs sm:text-sm text-zinc-200 truncate">{t.title}</div>
-                    <div className="text-[10px] text-zinc-500">{t.category}</div>
+                    <div className="text-xs sm:text-sm text-slate-200 truncate">{t.title}</div>
+                    <div className="text-[10px] text-slate-500">{t.category}</div>
                   </td>
                   <td className="px-4 py-3">
                     <PriorityBadge priority={t.priority} />
@@ -189,15 +189,15 @@ export default function AllSystemTickets({ tickets }: AllSystemTicketsProps) {
                   <td className="px-4 py-3">
                     <StatusBadge status={t.status} />
                   </td>
-                  <td className="px-4 py-3 text-xs text-zinc-300">{t.customerName}</td>
+                  <td className="px-4 py-3 text-xs text-slate-300">{t.customerName}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1.5">
-                      <UserPlus className="w-3 h-3 text-zinc-500 shrink-0" />
+                      <UserPlus className="w-3 h-3 text-slate-500 shrink-0" />
                       <select
                         value={t.assignedAgentId ?? ""}
                         disabled={assigningId === t.id}
                         onChange={(e) => handleAssign(t, e.target.value)}
-                        className="bg-zinc-800 border border-zinc-700 rounded-lg px-2 py-1 text-xs text-zinc-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 max-w-[140px]"
+                        className="bg-slate-700 border border-slate-600 rounded-lg px-2 py-1 text-xs text-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 max-w-[140px]"
                       >
                         <option value="">Unassigned</option>
                         {agents.map((a) => (
@@ -211,7 +211,7 @@ export default function AllSystemTickets({ tickets }: AllSystemTicketsProps) {
                   <td className="px-4 py-3">
                     <SLATimer deadline={t.slaDeadline} breach={t.slaBreach} />
                   </td>
-                  <td className="px-4 py-3 text-xs text-zinc-500 whitespace-nowrap">
+                  <td className="px-4 py-3 text-xs text-slate-500 whitespace-nowrap">
                     {new Date(t.createdAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}
                   </td>
                 </tr>
@@ -220,7 +220,7 @@ export default function AllSystemTickets({ tickets }: AllSystemTicketsProps) {
           </table>
           {filtered.length === 0 && (
             <div className="py-16 text-center">
-              <p className="text-zinc-500 text-xs sm:text-sm">No tickets match the current filters.</p>
+              <p className="text-slate-500 text-xs sm:text-sm">No tickets match the current filters.</p>
             </div>
           )}
         </div>

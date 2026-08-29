@@ -47,25 +47,25 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md relative animate-fade-up">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-indigo-600 mb-4">
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-indigo-600 mb-4 shadow-lg shadow-indigo-600/20">
             <Shield className="w-6 h-6 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-zinc-50 tracking-tight">Create Account</h1>
-          <p className="text-zinc-400 text-sm mt-1">Register with your assigned role</p>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Create Account</h1>
+          <p className="text-slate-600 text-sm mt-1">Register with your assigned role</p>
         </div>
 
-        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 shadow-2xl">
-          <div className="grid grid-cols-2 gap-2 mb-6 p-1 bg-zinc-800/60 rounded-xl">
+        <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xl">
+          <div className="grid grid-cols-2 gap-2 mb-6 p-1 bg-slate-100 rounded-xl">
             {ROLE_CONFIG.map(({ role: r, label, icon: Icon }) => (
               <button
                 key={r}
                 type="button"
                 onClick={() => setRole(r)}
                 className={`flex flex-col items-center gap-1 py-2.5 px-1 rounded-lg text-xs font-medium transition-all ${
-                  role === r ? "bg-indigo-600 text-white" : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700/50"
+                  role === r ? "bg-indigo-600 text-white" : "text-slate-700 hover:text-slate-900 hover:bg-slate-200"
                 }`}
               >
                 <Icon className="w-4 h-4" />
@@ -76,19 +76,19 @@ export default function RegisterPage() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-1.5">
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
                 Full Name
               </label>
               <input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Jane Smith"
-                className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full bg-white border border-slate-300 rounded-lg px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-1.5">
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
                 Email Address
               </label>
               <input
@@ -96,12 +96,12 @@ export default function RegisterPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@servicedesk.com"
-                className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full bg-white border border-slate-300 rounded-lg px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-1.5">
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
                 Password
               </label>
               <div className="relative">
@@ -109,12 +109,12 @@ export default function RegisterPage() {
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3.5 py-2.5 pr-10 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full bg-white border border-slate-300 rounded-lg px-3.5 py-2.5 pr-10 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700"
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -122,19 +122,19 @@ export default function RegisterPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-1.5">
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
                 Confirm Password
               </label>
               <input
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3.5 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full bg-white border border-slate-300 rounded-lg px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
 
-            <div className="rounded-lg bg-zinc-800/50 border border-zinc-700 px-3 py-2 text-xs text-zinc-400">
-              Registering as <span className="font-semibold text-indigo-300">{role.replace("_", " ")}</span>
+            <div className="rounded-lg bg-slate-100 border border-slate-200 px-3 py-2 text-xs text-slate-700">
+              Registering as <span className="font-semibold text-indigo-700">{role.replace("_", " ")}</span>
               {" · "}
               {ROLE_CONFIG.find((r) => r.role === role)?.desc}
             </div>
@@ -159,9 +159,9 @@ export default function RegisterPage() {
             </button>
           </form>
 
-          <p className="text-xs text-zinc-500 text-center mt-4">
+          <p className="text-xs text-slate-600 text-center mt-4">
             Already have an account?{" "}
-            <Link to="/login" className="text-indigo-400 hover:text-indigo-300 font-medium">
+            <Link to="/login" className="text-indigo-600 hover:text-indigo-700 font-medium">
               Sign in
             </Link>
           </p>

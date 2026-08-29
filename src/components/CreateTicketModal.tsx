@@ -67,7 +67,7 @@ export default function CreateTicketModal({ onClose, onSubmit }: CreateTicketMod
       className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-xl shadow-2xl animate-modal-in max-h-[90vh] overflow-y-auto">
+      <div className="bg-slate-50 border border-slate-200 rounded-2xl w-full max-w-xl shadow-2xl animate-modal-in max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800">
           <div>
             <h2 className="text-sm font-semibold text-white">Create New Request</h2>
@@ -75,7 +75,7 @@ export default function CreateTicketModal({ onClose, onSubmit }: CreateTicketMod
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-800 transition-all"
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-600 hover:text-white hover:bg-white transition-all"
           >
             <X className="w-4 h-4" />
           </button>
@@ -83,14 +83,14 @@ export default function CreateTicketModal({ onClose, onSubmit }: CreateTicketMod
 
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
           <div>
-            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
+            <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">
               Title *
             </label>
             <input
               value={title}
               onChange={(e) => { setTitle(e.target.value); setErrors((p) => ({ ...p, title: "" })); }}
               placeholder="Brief description of the issue…"
-              className={`w-full bg-slate-800 border rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all ${errors.title ? "border-red-600" : "border-slate-700"}`}
+              className={`w-full bg-white border rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all ${errors.title ? "border-red-600" : "border-slate-200"}`}
             />
             {errors.title && (
               <p className="flex items-center gap-1 text-xs text-red-400 mt-1">
@@ -102,13 +102,13 @@ export default function CreateTicketModal({ onClose, onSubmit }: CreateTicketMod
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
+              <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">
                 Category *
               </label>
               <select
                 value={category}
                 onChange={(e) => { setCategory(e.target.value); setErrors((p) => ({ ...p, category: "" })); }}
-                className={`w-full bg-slate-800 border rounded-lg px-3.5 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all ${errors.category ? "border-red-600" : "border-slate-700"}`}
+                className={`w-full bg-white border rounded-lg px-3.5 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all ${errors.category ? "border-red-600" : "border-slate-200"}`}
               >
                 <option value="" className="text-slate-500">Select category…</option>
                 {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -122,7 +122,7 @@ export default function CreateTicketModal({ onClose, onSubmit }: CreateTicketMod
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
+              <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">
                 Priority
               </label>
               <div className="grid grid-cols-2 gap-1.5">
@@ -140,7 +140,7 @@ export default function CreateTicketModal({ onClose, onSubmit }: CreateTicketMod
                             : p === "MEDIUM"
                               ? "bg-yellow-500 text-slate-900"
                               : "bg-green-600 text-white"
-                        : "bg-slate-800 text-slate-400 hover:bg-slate-700"
+                        : "bg-white text-slate-600 hover:bg-slate-100"
                     }`}
                   >
                     {PRIORITY_LABELS[p]}
@@ -151,7 +151,7 @@ export default function CreateTicketModal({ onClose, onSubmit }: CreateTicketMod
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
+            <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">
               Description *
             </label>
             <textarea
@@ -159,7 +159,7 @@ export default function CreateTicketModal({ onClose, onSubmit }: CreateTicketMod
               onChange={(e) => { setDescription(e.target.value); setErrors((p) => ({ ...p, description: "" })); }}
               placeholder="Provide detailed steps to reproduce, impact, and any error messages…"
               rows={4}
-              className={`w-full bg-slate-800 border rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all resize-none ${errors.description ? "border-red-600" : "border-slate-700"}`}
+              className={`w-full bg-white border rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all resize-none ${errors.description ? "border-red-600" : "border-slate-200"}`}
             />
             {errors.description && (
               <p className="flex items-center gap-1 text-xs text-red-400 mt-1">
@@ -171,7 +171,7 @@ export default function CreateTicketModal({ onClose, onSubmit }: CreateTicketMod
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
+            <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">
               Attachments
             </label>
             <div
@@ -179,13 +179,13 @@ export default function CreateTicketModal({ onClose, onSubmit }: CreateTicketMod
               onDragLeave={() => setDragOver(false)}
               onDrop={handleDrop}
               className={`border-2 border-dashed rounded-xl p-6 text-center transition-all cursor-pointer ${
-                dragOver ? "border-indigo-500 bg-indigo-950/20" : "border-slate-700 hover:border-slate-600"
+                dragOver ? "border-indigo-500 bg-indigo-950/20" : "border-slate-200 hover:border-slate-300"
               }`}
             >
               <Upload className="w-5 h-5 text-slate-500 mx-auto mb-2" />
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-600">
                 Drop files here or{" "}
-                <label className="text-indigo-400 hover:text-indigo-300 cursor-pointer">
+                <label className="text-indigo-400 hover:text-indigo-700 cursor-pointer">
                   browse
                   <input
                     type="file"
@@ -202,7 +202,7 @@ export default function CreateTicketModal({ onClose, onSubmit }: CreateTicketMod
                 {files.map((f, i) => (
                   <span
                     key={i}
-                    className="inline-flex items-center gap-1 bg-slate-800 text-slate-300 text-xs px-2.5 py-1 rounded-lg border border-slate-700"
+                    className="inline-flex items-center gap-1 bg-white text-slate-700 text-xs px-2.5 py-1 rounded-lg border border-slate-200"
                   >
                     {f}
                     <button
@@ -229,7 +229,7 @@ export default function CreateTicketModal({ onClose, onSubmit }: CreateTicketMod
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-2.5 rounded-lg border border-slate-700 text-sm text-slate-400 hover:text-white hover:border-slate-600 transition-all"
+              className="flex-1 py-2.5 rounded-lg border border-slate-200 text-sm text-slate-600 hover:text-white hover:border-slate-300 transition-all"
             >
               Cancel
             </button>

@@ -3,17 +3,17 @@ import type { TicketStatus, Priority } from "../types";
 const STATUS_CONFIG: Record<TicketStatus, { label: string; bg: string; text: string; dot: string }> = {
   OPEN: { label: "Open", bg: "bg-blue-950/50", text: "text-blue-300", dot: "bg-blue-400" },
   TRIAGED: { label: "Triaged", bg: "bg-purple-950/50", text: "text-purple-300", dot: "bg-purple-400" },
-  ASSIGNED: { label: "Assigned", bg: "bg-indigo-950/50", text: "text-indigo-300", dot: "bg-indigo-400" },
+  ASSIGNED: { label: "Assigned", bg: "bg-indigo-950/50", text: "text-indigo-700", dot: "bg-indigo-400" },
   IN_PROGRESS: { label: "In Progress", bg: "bg-amber-950/50", text: "text-amber-300", dot: "bg-amber-400" },
-  WAITING_FOR_CUSTOMER: { label: "Waiting", bg: "bg-yellow-950/50", text: "text-yellow-300", dot: "bg-yellow-400" },
+  WAITING_FOR_CUSTOMER: { label: "Waiting", bg: "bg-yellow-50", text: "text-yellow-300", dot: "bg-yellow-400" },
   RESOLVED: { label: "Resolved", bg: "bg-emerald-950/50", text: "text-emerald-300", dot: "bg-emerald-400" },
-  CLOSED: { label: "Closed", bg: "bg-zinc-800", text: "text-zinc-400", dot: "bg-zinc-500" },
+  CLOSED: { label: "Closed", bg: "bg-slate-100", text: "text-slate-600", dot: "bg-slate-400" },
 };
 
 const PRIORITY_CONFIG: Record<Priority, { label: string; bg: string; text: string; border: string }> = {
-  CRITICAL: { label: "Critical", bg: "bg-red-950/50", text: "text-red-300", border: "border-red-800" },
+  CRITICAL: { label: "Critical", bg: "bg-red-50", text: "text-red-300", border: "border-red-800" },
   HIGH: { label: "High", bg: "bg-orange-950/50", text: "text-orange-300", border: "border-orange-800" },
-  MEDIUM: { label: "Medium", bg: "bg-yellow-950/50", text: "text-yellow-300", border: "border-yellow-800" },
+  MEDIUM: { label: "Medium", bg: "bg-yellow-50", text: "text-yellow-300", border: "border-yellow-800" },
   LOW: { label: "Low", bg: "bg-emerald-950/50", text: "text-emerald-300", border: "border-emerald-800" },
 };
 

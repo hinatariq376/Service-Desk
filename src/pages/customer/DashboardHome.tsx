@@ -25,9 +25,9 @@ export default function DashboardHome({ tickets, onCreateTicket, onViewTicket }:
       {/* KPIs */}
       <div className="grid grid-cols-3 gap-4 animate-fade-up" style={{ animationDelay: "40ms" }}>
         {[
-          { label: "Active Tickets", value: active.length, icon: TicketCheck, color: "text-indigo-400", bg: "bg-indigo-950/40 border-indigo-900/50" },
-          { label: "Awaiting Response", value: awaiting.length, icon: Clock, color: "text-amber-400", bg: "bg-amber-950/30 border-amber-900/40" },
-          { label: "Resolved", value: resolved.length, icon: CheckCircle2, color: "text-emerald-400", bg: "bg-emerald-950/30 border-emerald-900/40" },
+          { label: "Active Tickets", value: active.length, icon: TicketCheck, color: "text-indigo-800", bg: "bg-indigo-950/40 border-indigo-900/50" },
+          { label: "Awaiting Response", value: awaiting.length, icon: Clock, color: "text-amber-800", bg: "bg-amber-950/30 border-amber-900/40" },
+          { label: "Resolved", value: resolved.length, icon: CheckCircle2, color: "text-emerald-800", bg: "bg-emerald-950/30 border-emerald-900/40" },
         ].map((c) => (
           <div key={c.label} className={`rounded-xl border p-4 ${c.bg}`}>
             <div className="flex items-center justify-between mb-3">
@@ -40,7 +40,7 @@ export default function DashboardHome({ tickets, onCreateTicket, onViewTicket }:
       </div>
 
       {/* Recent activity */}
-      <div className="animate-fade-up" style={{ animationDelay: "80ms" }}>
+      <div className="animate-fade-up text-white" style={{ animationDelay: "80ms" }}>
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <Activity className="w-4 h-4 text-slate-500" />

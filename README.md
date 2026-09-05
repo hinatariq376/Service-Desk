@@ -1,64 +1,33 @@
-# Service Desk Platform
+# Enterprise Service Desk Management System
 
-Production-ready multi-role Service Desk built with **React 19**, **TypeScript**, **Vite 8**, and **Supabase PostgreSQL**.
+A robust, role-based Service Desk and Ticket Management System built with React, TypeScript, Tailwind CSS, and Supabase. Designed for automated SLA calculations, real-time ticket escalation, audit logging, and role-restricted actions across Customers, Agents, and Administrators.
 
-## Quick Start
+---
 
-```bash
-npm install
-npm run dev
-```
+## Key Features
 
-Open the URL shown in the terminal (default port `8443`).
+* **Role-Based Access Control (RBAC):** Distinct dashboards and permissions for Customers, Support Agents, and Admins.
+* **SLA & Priority Engine:** Dynamic response and resolution timer tracking with automatic SLA breach detection.
+* **Audit Trail & Logging:** Automated Supabase database triggers capturing all `INSERT`, `UPDATE`, and `DELETE` actions.
+* **Soft Delete Mechanism:** Database-level interception preventing hard deletes while maintaining data integrity.
+* **Responsive UI & Dark Mode:** Built with Tailwind CSS supporting high-contrast accessibility across themes.
 
-## Demo Accounts
+---
 
-Pre-filled on the login screen. Password for all demo accounts: **`Demo123!`**
+## Tech Stack
 
-| Role | Email |
-|------|-------|
-| Customer | `customer@servicedesk.com` |
-| Support Agent | `agent@servicedesk.com` |
-| Admin | `admin@servicedesk.com` |
+| Layer | Technology |
+| :--- | :--- |
+| **Frontend** | React 18, TypeScript, Tailwind CSS, Vite |
+| **State & Router** | React Context API / Zustand, React Router v6 |
+| **Backend / DB** | Supabase (PostgreSQL, Row Level Security) |
+| **Authentication** | Supabase Auth (JWT & Role Metadata) |
 
-Register new accounts at `/register` with role selection (Customer, Support Agent, Admin).
+---
 
-## Features
+## Installation & Setup
 
-- **Multi-role authentication** — Supabase Auth + `users` profile table
-- **Role-based ticket isolation** — Customers see own tickets; agents see only assigned tickets; admins see all
-- **State machine** — Enforced status transitions with error UI on invalid moves
-- **SLA engine** — Priority-based response/resolution deadlines with live countdown badges
-- **Realtime sync** — Supabase `postgres_changes` for tickets, comments, and audit logs
-- **Audit trail** — Automatic `audit_logs` inserts for create, status, priority, and assignment events
-
-## Routes
-
-| Path | Access |
-|------|--------|
-| `/login` | Public |
-| `/register` | Public |
-| `/customer/*` | Customer |
-| `/agent/*` | Support Agent |
-| `/admin/*` | Admin |
-
-## Documentation
-
-- [ARCHITECTURE.md](./ARCHITECTURE.md) — System design
-- [API.md](./API.md) — Supabase tables and client services
-- [DECISIONS.md](./DECISIONS.md) — Engineering decisions
-- [BUILD_LOG.md](./BUILD_LOG.md) — Build history
-- [AI_ENGINEERING_LOG.md](./AI_ENGINEERING_LOG.md) — AI-assisted development log
-
-## Scripts
-
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start Vite dev server |
-| `npm run build` | Production build |
-| `npm run preview` | Preview production build |
-| `npm run lint` | ESLint |
-
-## Supabase
-
-Live project credentials are configured in `src/lib/supabase.ts` as approved for this deployment.
+1. **Clone the Repository:**
+   ```bash
+   git clone [https://github.com/your-username/service-desk.git](https://github.com/your-username/service-desk.git)
+   cd service-desk

@@ -32,33 +32,37 @@ export default function SLATimer({ deadline, breach, size = "sm" }: SLATimerProp
   if (size === "lg") {
     return (
       <div
-        className={`rounded-xl border p-4 ${
+        className={`rounded-xl border p-3.5 shadow-sm transition-all ${
           isBreached
-            ? "bg-red-950 border-red-800"
+            ? "bg-red-50 border-red-200 text-red-700"
             : isWarning
-              ? "bg-amber-950 border-amber-700"
-              : "bg-slate-50 border-slate-200"
+              ? "bg-amber-50 border-amber-200 text-amber-800"
+              : "bg-white border-slate-200 text-slate-900"
         }`}
       >
-        <div className="flex items-center gap-2 mb-2">
+        <div className="flex items-center gap-1.5 mb-1">
           {isBreached ? (
-            <AlertTriangle className="w-4 h-4 text-red-400 animate-sla-pulse" />
+            <AlertTriangle className="w-4 h-4 text-red-600 animate-sla-pulse" />
           ) : (
-            <Clock className="w-4 h-4 text-slate-600" />
+            <Clock className="w-4 h-4 text-slate-500" />
           )}
-          <span className="text-xs font-semibold uppercase tracking-wider text-slate-600">
-            {isBreached ? "SLA BREACHED" : "Critical Resolution SLA"}
+          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600">
+            {isBreached ? "SLA BREACHED" : "Resolution SLA Target"}
           </span>
         </div>
         <div
-          className={`font-mono text-3xl font-bold tracking-tighter ${
-            isBreached ? "text-red-400 animate-sla-pulse" : isWarning ? "text-amber-400" : "text-emerald-400"
+          className={`font-mono text-2xl font-bold tracking-tight ${
+            isBreached
+              ? "text-red-600 animate-sla-pulse"
+              : isWarning
+                ? "text-amber-700"
+                : "text-emerald-700"
           }`}
         >
           {isBreached ? `-${formatDuration(Math.abs(remaining))}` : formatDuration(remaining)}
         </div>
-        <div className="text-xs text-slate-500 mt-1">
-          {isBreached ? "Resolution overdue" : "Remaining"}
+        <div className="text-[11px] text-slate-500 mt-0.5">
+          {isBreached ? "Resolution overdue" : "Remaining target time"}
         </div>
       </div>
     );
@@ -66,8 +70,12 @@ export default function SLATimer({ deadline, breach, size = "sm" }: SLATimerProp
 
   return (
     <span
-      className={`inline-flex items-center gap-1 font-mono text-xs font-medium ${
-        isBreached ? "text-red-600 animate-sla-pulse" : isWarning ? "text-amber-600" : "text-slate-500"
+      className={`inline-flex items-center gap-1 font-mono text-xs font-semibold px-2 py-0.5 rounded border ${
+        isBreached
+          ? "bg-red-50 text-red-700 border-red-200 animate-sla-pulse"
+          : isWarning
+            ? "bg-amber-50 text-amber-800 border-amber-200"
+            : "bg-slate-100 text-slate-700 border-slate-200"
       }`}
     >
       <Clock className="w-3 h-3" />

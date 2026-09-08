@@ -23,94 +23,102 @@ export default function ProfilePage({ user }: ProfilePageProps) {
   };
 
   return (
-    <div className="p-6 space-y-6 max-w-2xl mx-auto">
+    <div className="space-y-6 max-w-2xl mx-auto w-full min-w-0">
       <div className="animate-fade-up">
-        <h2 className="text-lg font-bold text-white">Profile Settings</h2>
-        <p className="text-xs text-slate-500 mt-0.5">Manage your account and notification preferences</p>
+        <h2 className="text-xl font-bold text-slate-900 tracking-tight">Account & Profile Settings</h2>
+        <p className="text-xs text-slate-500 mt-0.5">Manage your identity and notification preferences</p>
       </div>
 
-      {/* Avatar */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 flex items-center gap-4 animate-fade-up" style={{ animationDelay: "40ms" }}>
-        <div className="w-16 h-16 rounded-2xl bg-blue-600 flex items-center justify-center text-2xl font-bold text-white">
-          {user.name.split(" ").map((n) => n[0]).join("")}
+      {/* Profile Card */}
+      <div className="bg-white border border-slate-200 rounded-xl p-5 flex items-center gap-4 shadow-sm animate-fade-up" style={{ animationDelay: "40ms" }}>
+        <div className="w-14 h-14 rounded-2xl bg-indigo-600 flex items-center justify-center text-xl font-bold text-white shadow-md shadow-indigo-600/20">
+          {user.name.split(" ").map((n) => n[0]).join("").toUpperCase()}
         </div>
         <div>
-          <div className="text-base font-bold text-white">{user.name}</div>
-          <div className="text-xs text-slate-400 mt-0.5">{user.email}</div>
-          <span className="inline-flex items-center gap-1 mt-2 text-[10px] font-bold text-blue-400 bg-blue-950/40 border border-blue-900 px-2 py-0.5 rounded">
-            <Shield className="w-2.5 h-2.5" />
-            Customer
+          <div className="text-base font-bold text-slate-900">{user.name}</div>
+          <div className="text-xs text-slate-500 mt-0.5">{user.email}</div>
+          <span className="inline-flex items-center gap-1 mt-1.5 text-[10px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-md">
+            <Shield className="w-3 h-3" />
+            {user.role.replace(/_/g, " ")}
           </span>
         </div>
       </div>
 
       {/* Personal info */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-4 animate-fade-up" style={{ animationDelay: "80ms" }}>
-        <h3 className="text-sm font-semibold text-white">Personal Information</h3>
-        <div className="grid grid-cols-2 gap-4">
+      <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4 shadow-sm animate-fade-up" style={{ animationDelay: "80ms" }}>
+        <h3 className="text-sm font-bold text-slate-900">Personal Information</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Full Name</label>
-            <input value={name} onChange={(e) => setName(e.target.value)} className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3.5 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" />
+            <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">Full Name</label>
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full bg-white border border-slate-300 rounded-lg px-3.5 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all shadow-sm"
+            />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Email Address</label>
-            <input value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3.5 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all" />
+            <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">Email Address</label>
+            <input
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full bg-white border border-slate-300 rounded-lg px-3.5 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all shadow-sm"
+            />
           </div>
-        </div>
-        <div>
-          <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Organization</label>
-          <input value="Hina Tariq Organization" readOnly className="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-3.5 py-2.5 text-sm text-slate-400 cursor-not-allowed" />
         </div>
       </div>
 
       {/* Notifications */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-4 animate-fade-up" style={{ animationDelay: "120ms" }}>
+      <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-3 shadow-sm animate-fade-up" style={{ animationDelay: "120ms" }}>
         <div className="flex items-center gap-2">
           <Bell className="w-4 h-4 text-slate-500" />
-          <h3 className="text-sm font-semibold text-white">Notifications</h3>
+          <h3 className="text-sm font-bold text-slate-900">Notification Preferences</h3>
         </div>
         {[
-          { label: "Email Notifications", desc: "Receive ticket updates via email", state: notifEmail, set: setNotifEmail },
-          { label: "SLA Warning Alerts", desc: "Alert when SLA deadline is approaching", state: notifSLA, set: setNotifSLA },
-          { label: "Status Change Updates", desc: "Notify on every ticket status change", state: notifStatus, set: setNotifStatus },
+          { label: "Email Notifications", desc: "Receive ticket resolution alerts via email", state: notifEmail, set: setNotifEmail },
+          { label: "SLA Warning Alerts", desc: "Alert when SLA deadline is approaching under 30 minutes", state: notifSLA, set: setNotifSLA },
+          { label: "Status Change Updates", desc: "Real-time updates on every status transition", state: notifStatus, set: setNotifStatus },
         ].map(({ label, desc, state, set }) => (
-          <div key={label} className="flex items-center justify-between py-2 border-b border-slate-800 last:border-0">
+          <div key={label} className="flex items-center justify-between py-2 border-b border-slate-100 last:border-0">
             <div>
-              <div className="text-sm text-slate-200">{label}</div>
+              <div className="text-sm font-medium text-slate-800">{label}</div>
               <div className="text-xs text-slate-500 mt-0.5">{desc}</div>
             </div>
             <button
               onClick={() => set(!state)}
-              className={`relative w-9 h-5 rounded-full transition-colors ${state ? "bg-indigo-600" : "bg-slate-700"}`}
+              className={`relative w-10 h-6 rounded-full transition-colors ${state ? "bg-indigo-600" : "bg-slate-300"}`}
             >
-              <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${state ? "translate-x-4" : "translate-x-0.5"}`} />
+              <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-md transition-transform ${state ? "translate-x-4.5" : "translate-x-0.5"}`} />
             </button>
           </div>
         ))}
       </div>
 
       {/* Password */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-4 animate-fade-up" style={{ animationDelay: "160ms" }}>
+      <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4 shadow-sm animate-fade-up" style={{ animationDelay: "160ms" }}>
         <div className="flex items-center gap-2">
           <Key className="w-4 h-4 text-slate-500" />
-          <h3 className="text-sm font-semibold text-white">Change Password</h3>
+          <h3 className="text-sm font-bold text-slate-900">Security Credentials</h3>
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {[
             { label: "Current Password", value: currentPw, onChange: setCurrentPw },
             { label: "New Password", value: newPw, onChange: setNewPw },
           ].map(({ label, value, onChange }) => (
             <div key={label}>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">{label}</label>
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">{label}</label>
               <div className="relative">
                 <input
                   type={showPw ? "text" : "password"}
                   value={value}
                   onChange={(e) => onChange(e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3.5 py-2.5 pr-10 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                  className="w-full bg-white border border-slate-300 rounded-lg px-3.5 py-2 pr-10 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all shadow-sm"
                   placeholder="••••••••"
                 />
-                <button onClick={() => setShowPw(!showPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors">
+                <button
+                  type="button"
+                  onClick={() => setShowPw(!showPw)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                >
                   {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
@@ -121,13 +129,13 @@ export default function ProfilePage({ user }: ProfilePageProps) {
 
       <button
         onClick={handleSave}
-        className={`w-full py-2.5 rounded-xl font-semibold text-sm transition-all animate-fade-up flex items-center justify-center gap-2 ${
-          saved ? "bg-emerald-600 text-white" : "bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-900/30"
+        className={`w-full py-2.5 rounded-xl font-semibold text-sm transition-all shadow-md animate-fade-up flex items-center justify-center gap-2 ${
+          saved ? "bg-emerald-600 text-white shadow-emerald-600/20" : "bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-600/20"
         }`}
         style={{ animationDelay: "200ms" }}
       >
         <Save className="w-4 h-4" />
-        {saved ? "Changes Saved!" : "Save Changes"}
+        {saved ? "Changes Saved!" : "Save Profile Changes"}
       </button>
     </div>
   );

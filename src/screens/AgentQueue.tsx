@@ -12,8 +12,8 @@ type QueueView = "assigned" | "active" | "breach";
 
 const PAGE_TITLES: Record<QueueView, string> = {
   assigned: "Assigned to Me",
-  active: "Active Work",
-  breach: "SLA Breached",
+  active: "Active Work Queue",
+  breach: "SLA Breached Queue",
 };
 
 const PRIORITY_ORDER: Record<string, number> = { CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3 };
@@ -42,9 +42,9 @@ export default function AgentQueue() {
   };
 
   const EMPTY_MSGS: Record<QueueView, string> = {
-    assigned: "No tickets assigned to you. An admin must assign tickets before they appear here.",
-    active: "No active tickets assigned to you.",
-    breach: "No SLA breaches on your assigned tickets.",
+    assigned: "No tickets assigned to you. An admin can assign incoming tickets from the triage queue.",
+    active: "No active in-progress tickets assigned to you.",
+    breach: "Zero SLA breaches across your assigned work.",
   };
 
   const listTickets = VIEW_TICKETS[queueView];
@@ -64,7 +64,7 @@ export default function AgentQueue() {
   return (
     <AppLayout
       user={user}
-      portalLabel="Agent Portal"
+      portalLabel="Agent Workspace"
       navItems={navItems}
       activePage={queueView}
       onNavigate={(id) => {
@@ -76,16 +76,16 @@ export default function AgentQueue() {
       loading={loading}
       error={error}
     >
-      <div className="flex h-full overflow-hidden w-full relative" style={{ height: "calc(100vh - 56px)" }}>
-        {/* Ticket List Column (Full width on mobile, 80 on desktop) */}
+      <div className="flex h-full overflow-hidden w-full relative bg-white border border-slate-200 rounded-xl shadow-sm" style={{ height: "calc(100vh - 120px)" }}>
+        {/* Ticket List Column */}
         <div
-          className={`w-full md:w-80 shrink-0 border-r border-slate-700 flex flex-col overflow-hidden bg-slate-800/40 ${
+          className={`w-full md:w-80 shrink-0 border-r border-slate-200 flex flex-col overflow-hidden bg-slate-50/50 ${
             selectedId ? "hidden md:flex" : "flex"
           }`}
         >
-          <div className="px-4 py-3 border-b border-slate-700 shrink-0">
-            <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-              {listTickets.length} ticket{listTickets.length !== 1 ? "s" : ""} — strict assignment isolation
+          <div className="px-4 py-3 border-b border-slate-200 shrink-0 bg-white">
+            <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+              {listTickets.length} Ticket{listTickets.length !== 1 ? "s" : ""} in Queue
             </div>
           </div>
           <div className="flex-1 overflow-hidden">
@@ -98,17 +98,16 @@ export default function AgentQueue() {
           </div>
         </div>
 
-        {/* Ticket Detail Column (Hidden on mobile when no ticket selected) */}
+        {/* Ticket Detail Column */}
         <div className={`flex-1 overflow-hidden flex-col ${selectedId ? "flex" : "hidden md:flex"}`}>
           {selectedTicket ? (
             <div className="flex flex-col h-full w-full min-w-0">
-              {/* Back button header on mobile */}
-              <div className="md:hidden px-4 py-2.5 border-b border-slate-700 bg-slate-900 flex items-center shrink-0">
+              <div className="md:hidden px-4 py-2.5 border-b border-slate-200 bg-white flex items-center shrink-0">
                 <button
                   onClick={() => setSelectedId(null)}
-                  className="inline-flex items-center gap-1.5 text-xs text-indigo-400 font-semibold hover:text-indigo-300 transition-colors"
+                  className="inline-flex items-center gap-1.5 text-xs text-indigo-600 font-bold hover:text-indigo-700 transition-colors"
                 >
-                  <ArrowLeft className="w-4 h-4" /> Back to Queue List
+                  <ArrowLeft className="w-4 h-4" /> Back to Queue
                 </button>
               </div>
               <div className="flex-1 overflow-hidden">
@@ -122,11 +121,14 @@ export default function AgentQueue() {
               </div>
             </div>
           ) : (
-            <div className="flex items-center justify-center h-full flex-col gap-3 p-6 text-center">
-              <div className="w-12 h-12 rounded-2xl bg-slate-700 flex items-center justify-center">
-                <UserCheck className="w-5 h-5 text-slate-600" />
+            <div className="flex items-center justify-center h-full flex-col gap-3 p-6 text-center bg-slate-50/30">
+              <div className="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center">
+                <UserCheck className="w-6 h-6 text-indigo-600" />
               </div>
-              <p className="text-sm text-slate-500">Select an assigned ticket to view details</p>
+              <div>
+                <h4 className="text-sm font-bold text-slate-800">No Ticket Selected</h4>
+                <p className="text-xs text-slate-500 mt-0.5">Select a ticket from the left panel to review SLA and reply.</p>
+              </div>
             </div>
           )}
         </div>

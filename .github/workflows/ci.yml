@@ -1,43 +1,64 @@
-name: CI
+name: CI/CD Pipeline
 
 on:
   push:
     branches:
       - main
+      - master
   pull_request:
     branches:
       - main
+      - master
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  ci:
-    name: Lint, Typecheck, Test & Build
+  validate:
+    name: Full-Stack Verification (Lint, Typecheck, Test, Build)
     runs-on: ubuntu-latest
 
+    services:
+      mongodb:
+        image: mongo:7.0
+        ports:
+          - 27017:27017
+
     steps:
-      - name: Checkout repository
+      - name: 1. Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
+      - name: 2. Set up Node.js 20
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'npm'
 
-      - name: Install dependencies
+      - name: 3. Install Root & Frontend Dependencies
         run: npm ci
 
-      - name: 1. Linting
+      - name: 4. Install Backend Dependencies
+        run: cd server && npm ci
+
+      - name: 5. Code Linting
         run: npm run lint
 
-      - name: 2. Type checking
+      - name: 6. TypeScript Type Checking (Frontend)
         run: npx tsc --noEmit
 
-      - name: 3. Vitest test suite
+      - name: 7. TypeScript Type Checking (Backend)
+        run: cd server && npx tsc --noEmit
+
+      - name: 8. Frontend & Domain Unit Tests
         run: npm test
 
-      - name: 4. Production build verification
+      - name: 9. Backend Integration & API Tests
+        env:
+          MONGODB_URI: mongodb://localhost:27017/servicedesk_test
+          JWT_ACCESS_SECRET: test_access_secret_key_2026_xyz
+          JWT_REFRESH_SECRET: test_refresh_secret_key_2026_xyz
+        run: cd server && npm test
+
+      - name: 10. Production Build Verification
         run: npm run build

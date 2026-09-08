@@ -25,10 +25,10 @@ export default function CustomerDashboard() {
   const selectedTicket = selectedTicketId ? tickets.find((t) => t.id === selectedTicketId) : null;
 
   const PAGE_TITLES: Record<string, string> = {
-    dashboard: "Dashboard",
+    dashboard: "Customer Dashboard",
     tickets: "My Tickets",
     create: "Create Request",
-    profile: "Profile",
+    profile: "Profile Settings",
     detail: "Ticket Detail",
   };
 
@@ -54,19 +54,13 @@ export default function CustomerDashboard() {
   };
 
   const handleCreate = async (partial: {
-    title?: string;
-    description?: string;
-    category?: string;
-    priority?: import("../types").Priority;
+    title: string;
+    description: string;
+    category: string;
+    priority: import("../types").Priority;
     attachments?: string[];
   }) => {
-    await createNewTicket({
-      title: partial.title || "",
-      description: partial.description || "",
-      category: partial.category || "General",
-      priority: partial.priority || "MEDIUM",
-      attachments: partial.attachments,
-    });
+    await createNewTicket(partial);
   };
 
   const handleLogout = async () => {
@@ -95,12 +89,12 @@ export default function CustomerDashboard() {
         )}
         {page === "profile" && <ProfilePage user={user} />}
         {page === "detail" && selectedTicket && (
-          <div className="h-full flex flex-col" style={{ height: "calc(100vh - 56px)" }}>
-            <div className="px-6 py-3 border-b border-slate-700">
+          <div className="h-full flex flex-col bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm" style={{ height: "calc(100vh - 120px)" }}>
+            <div className="px-5 py-2.5 border-b border-slate-200 bg-slate-50 flex items-center">
               <button
                 type="button"
                 onClick={() => setPage("tickets")}
-                className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-200 transition-colors"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition-colors"
               >
                 <ArrowLeft className="w-3.5 h-3.5" />
                 Back to My Tickets

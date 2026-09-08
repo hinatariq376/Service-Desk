@@ -54,7 +54,7 @@ export default function AdminDashboard() {
   return (
     <AppLayout
       user={user}
-      portalLabel="Admin Portal"
+      portalLabel="Administrator Operations"
       navItems={navItems}
       activePage={page}
       onNavigate={(id) => setPage(id as AdminPage)}
@@ -63,7 +63,7 @@ export default function AdminDashboard() {
       loading={loading}
       error={error}
     >
-      <div className="w-full min-w-0 h-full overflow-y-auto p-3 sm:p-6">
+      <div className="w-full min-w-0 h-full overflow-y-auto">
         {page === "analytics" && <OverviewAnalytics tickets={tickets} />}
         {page === "users" && <UserManagement />}
         {page === "tickets" && <AllSystemTickets tickets={tickets} />}

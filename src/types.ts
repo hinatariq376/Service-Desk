@@ -63,6 +63,26 @@ export interface AuditLog {
   newValue?: Record<string, unknown>;
 }
 
+export type NotificationType =
+  | "TICKET_CREATED"
+  | "STATUS_CHANGED"
+  | "AGENT_ASSIGNED"
+  | "COMMENT_ADDED"
+  | "INTERNAL_NOTE_ADDED"
+  | "SLA_BREACH_WARNING"
+  | "SLA_BREACHED";
+
+export interface Notification {
+  id: string;
+  userId: string;
+  type: NotificationType;
+  title: string;
+  body: string;
+  entityId: string;
+  isRead: boolean;
+  createdAt: string;
+}
+
 export const DEMO_PASSWORD = "Demo123!";
 
 export const DEMO_EMAILS: Record<Role, string> = {

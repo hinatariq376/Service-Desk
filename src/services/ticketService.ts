@@ -1,4 +1,6 @@
 import { supabase } from "../lib/supabase";
+
+import type { AuditLog } from '../types'; 
 import { cacheUsers, mapComment, mapAuditLog, mapTicket } from "../lib/mappers";
 import { computeSLADeadlines, isSLABreached } from "../lib/sla";
 import { validateTransition } from "../lib/stateMachine";

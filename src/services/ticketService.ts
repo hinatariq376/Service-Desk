@@ -36,7 +36,19 @@ export async function getTickets(userId?: string, userRole?: string): Promise<Ti
 
     const { data, error } = await query;
     if (error) throw new Error(error.message);
-    if (data) return data.map(mapTicket);
+    if (data) {
+      const dbTickets = data.map(mapTicket);
+      const localTickets = MOCK_TICKETS.filter(
+        (t) =>
+          !(t as any).isDeleted &&
+          !(t as any).is_deleted &&
+          (userRole === "customer" || normalizedRole === "customer"
+            ? t.customerId === userId
+            : true) &&
+          !dbTickets.some((db) => db.id === t.id || db.displayId === t.displayId),
+      );
+      return [...localTickets, ...dbTickets];
+    }
     return [];
   } catch (_) {
     // Graceful fallback to mock data when network / database is offline

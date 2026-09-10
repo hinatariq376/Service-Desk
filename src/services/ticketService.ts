@@ -14,39 +14,52 @@ async function loadUserDirectory() {
   } catch (_) {}
 }
 
-export async function fetchTicketsForUser(user: User): Promise<Ticket[]> {
+export async function getTickets(userId?: string, userRole?: string): Promise<Ticket[]> {
   try {
     await loadUserDirectory();
 
     let query = supabase
       .from("tickets")
       .select("*")
+      .or("is_deleted.is.null,is_deleted.eq.false")
       .is("deleted_at", null)
       .order("created_at", { ascending: false });
 
-    if (user.role === "CUSTOMER") {
-      query = query.eq("customer_id", user.id);
-    } else if (user.role === "SUPPORT_AGENT") {
-      query = query.or(`assigned_agent_id.eq.${user.id},assigned_agent_id.is.null`);
+    const normalizedRole = userRole?.toLowerCase();
+    if (userRole === "customer" || normalizedRole === "customer") {
+      query = query.eq("customer_id", userId);
+    } else if (userRole === "support_agent" || normalizedRole === "support_agent") {
+      if (userId) {
+        query = query.or(`assigned_agent_id.eq.${userId},assigned_agent_id.is.null`);
+      }
     }
 
     const { data, error } = await query;
     if (error) throw new Error(error.message);
-    if (data && data.length > 0) return data.map(mapTicket);
+    if (data) return data.map(mapTicket);
+    return [];
   } catch (_) {
     // Graceful fallback to mock data when network / database is offline
-    if (user.role === "CUSTOMER") {
-      return MOCK_TICKETS.filter((t) => t.customerId === user.id || t.customerId === "u1");
+    const normalizedRole = userRole?.toLowerCase();
+    if (userRole === "customer" || normalizedRole === "customer") {
+      return MOCK_TICKETS.filter(
+        (t) => !(t as any).isDeleted && !(t as any).is_deleted && t.customerId === userId,
+      );
     }
-    if (user.role === "SUPPORT_AGENT") {
-      return MOCK_TICKETS.filter((t) => t.assignedAgentId === user.id || t.assignedAgentId === "u2" || !t.assignedAgentId);
+    if (userRole === "support_agent" || normalizedRole === "support_agent") {
+      return MOCK_TICKETS.filter(
+        (t) =>
+          !(t as any).isDeleted &&
+          !(t as any).is_deleted &&
+          (!userId || t.assignedAgentId === userId || !t.assignedAgentId),
+      );
     }
-    return MOCK_TICKETS;
+    return MOCK_TICKETS.filter((t) => !(t as any).isDeleted && !(t as any).is_deleted);
   }
+}
 
-  return user.role === "CUSTOMER"
-    ? MOCK_TICKETS.filter((t) => t.customerId === user.id || t.customerId === "u1")
-    : MOCK_TICKETS;
+export async function fetchTicketsForUser(user: User): Promise<Ticket[]> {
+  return getTickets(user.id, user.role);
 }
 
 export async function fetchMessagesForTickets(ticketIds: string[]): Promise<Message[]> {
@@ -277,24 +290,43 @@ export async function addComment(
   }
 }
 
+export async function softDeleteTicket(id: string): Promise<{ error?: string }>;
+export async function softDeleteTicket(user: User, ticketId: string): Promise<{ error?: string }>;
 export async function softDeleteTicket(
-  user: User,
-  ticketId: string,
+  userOrId: User | string,
+  ticketId?: string,
 ): Promise<{ error?: string }> {
-  if (user.role !== "ADMIN") {
-    return { error: "Only administrators can delete tickets." };
+  let id: string;
+  const isUserObj = typeof userOrId === "object" && userOrId !== null;
+  if (isUserObj) {
+    if (userOrId.role !== "ADMIN") {
+      return { error: "Only administrators can delete tickets." };
+    }
+    id = ticketId!;
+  } else {
+    id = userOrId;
   }
 
+  const now = new Date().toISOString();
   try {
+    const payload = isUserObj
+      ? { is_deleted: true, deleted_at: now, updated_at: now }
+      : { is_deleted: true, updated_at: now };
+
     const { error } = await supabase
       .from("tickets")
-      .update({ deleted_at: new Date().toISOString() })
-      .eq("id", ticketId);
+      .update(payload)
+      .eq("id", id);
 
     if (error) return { error: error.message };
   } catch (_) {
-    const idx = MOCK_TICKETS.findIndex((t) => t.id === ticketId);
-    if (idx !== -1) MOCK_TICKETS.splice(idx, 1);
+    const idx = MOCK_TICKETS.findIndex((t) => t.id === id);
+    if (idx !== -1) {
+      (MOCK_TICKETS[idx] as any).isDeleted = true;
+      (MOCK_TICKETS[idx] as any).is_deleted = true;
+      MOCK_TICKETS[idx].updatedAt = now;
+      MOCK_TICKETS.splice(idx, 1);
+    }
   }
   return {};
 }

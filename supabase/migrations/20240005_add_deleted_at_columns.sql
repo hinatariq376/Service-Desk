@@ -6,10 +6,14 @@
 -- Add soft-delete column to tickets
 ALTER TABLE public.tickets 
   ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP WITH TIME ZONE DEFAULT NULL;
+ALTER TABLE public.tickets 
+  ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN DEFAULT false;
 
 -- Add soft-delete column to ticket_comments
 ALTER TABLE public.ticket_comments 
   ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP WITH TIME ZONE DEFAULT NULL;
+ALTER TABLE public.ticket_comments 
+  ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN DEFAULT false;
 
 -- Create performance indexes for non-deleted records
 CREATE INDEX IF NOT EXISTS idx_tickets_active 

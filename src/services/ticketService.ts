@@ -40,18 +40,26 @@ export async function getTickets(userId?: string, userRole?: string): Promise<Ti
 
     const { data, error } = await query;
     if (error) throw new Error(error.message);
-    if (data) {
-      const dbTickets = data.map(mapTicket);
-      const localTickets = MOCK_TICKETS.filter(
-        (t) =>
-          !(t as any).isDeleted &&
-          !(t as any).is_deleted &&
-          (userRole === "customer" || normalizedRole === "customer"
-            ? t.customerId === userId
-            : true) &&
-          !dbTickets.some((db) => db.id === t.id || db.displayId === t.displayId),
-      );
-      return [...localTickets, ...dbTickets];
+    if (data && data.length > 0) {
+      return data.map(mapTicket);
+    }
+    // If DB is empty, return initial mock tickets for testing/preview
+    if (data && data.length === 0) {
+      const normalizedRole = userRole?.toLowerCase();
+      if (userRole === "customer" || normalizedRole === "customer") {
+        return MOCK_TICKETS.filter(
+          (t) => !(t as any).isDeleted && !(t as any).is_deleted && t.customerId === userId,
+        );
+      }
+      if (userRole === "support_agent" || normalizedRole === "support_agent") {
+        return MOCK_TICKETS.filter(
+          (t) =>
+            !(t as any).isDeleted &&
+            !(t as any).is_deleted &&
+            (!userId || t.assignedAgentId === userId || !t.assignedAgentId),
+        );
+      }
+      return MOCK_TICKETS.filter((t) => !(t as any).isDeleted && !(t as any).is_deleted);
     }
     return [];
   } catch (_) {
@@ -204,18 +212,13 @@ export async function updateTicketStatus(
       .single();
 
     if (error) {
-      ticket.status = nextStatus;
-      ticket.updatedAt = now;
-      ticket.slaBreach = breached;
-      return { ticket };
+      console.error("updateTicketStatus error:", error);
+      return { error: error.message };
     }
     await loadUserDirectory();
     return { ticket: mapTicket(data) };
-  } catch (_) {
-    ticket.status = nextStatus;
-    ticket.updatedAt = now;
-    ticket.slaBreach = breached;
-    return { ticket };
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Failed to update ticket status." };
   }
 }
 
@@ -259,26 +262,21 @@ export async function updateTicketPriority(
       .single();
 
     if (error) {
-      ticket.priority = priority;
-      ticket.slaDeadline = sla.slaDeadline;
-      ticket.updatedAt = now;
-      return { ticket };
+      console.error("updateTicketPriority error:", error);
+      return { error: error.message };
     }
     await loadUserDirectory();
     return { ticket: mapTicket(data) };
-  } catch (_) {
-    ticket.priority = priority;
-    ticket.slaDeadline = sla.slaDeadline;
-    ticket.updatedAt = now;
-    return { ticket };
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Failed to update ticket priority." };
   }
 }
 
 export async function assignTicketToAgent(
   admin: User,
   ticket: Ticket,
-  agentId: string,
-  agentName: string,
+  agentId: string | null,
+  agentName?: string,
 ): Promise<{ ticket?: Ticket; error?: string }> {
   if (admin.role !== "ADMIN") {
     return { error: "Only administrators can assign tickets." };
@@ -288,26 +286,34 @@ export async function assignTicketToAgent(
     ticket.status === "OPEN" || ticket.status === "TRIAGED" ? "ASSIGNED" : ticket.status;
   const now = new Date().toISOString();
 
-  if (!isValidUUID(ticket.id) || !isValidUUID(agentId)) {
-    ticket.assignedAgentId = agentId;
-    ticket.assignedAgentName = agentName;
+  // If local mock ticket
+  if (!isValidUUID(ticket.id)) {
+    ticket.assignedAgentId = agentId || undefined;
+    ticket.assignedAgentName = agentName || undefined;
     ticket.status = nextStatus;
     ticket.updatedAt = now;
     const idx = MOCK_TICKETS.findIndex((t) => t.id === ticket.id || t.displayId === ticket.id);
     if (idx !== -1) {
-      MOCK_TICKETS[idx].assignedAgentId = agentId;
-      MOCK_TICKETS[idx].assignedAgentName = agentName;
+      MOCK_TICKETS[idx].assignedAgentId = agentId || undefined;
+      MOCK_TICKETS[idx].assignedAgentName = agentName || undefined;
       MOCK_TICKETS[idx].status = nextStatus;
       MOCK_TICKETS[idx].updatedAt = now;
     }
     return { ticket };
   }
 
+  // If agentId is provided but not a valid UUID (e.g. mock ID like "u2" with a DB ticket)
+  if (agentId && !isValidUUID(agentId)) {
+    return {
+      error: `Invalid agent ID (${agentId}). Make sure agents are registered users in Supabase.`,
+    };
+  }
+
   try {
     const { data, error } = await supabase
       .from("tickets")
       .update({
-        assigned_agent_id: agentId,
+        assigned_agent_id: agentId || null,
         status: nextStatus,
         updated_at: now,
       })
@@ -316,20 +322,14 @@ export async function assignTicketToAgent(
       .single();
 
     if (error) {
-      ticket.assignedAgentId = agentId;
-      ticket.assignedAgentName = agentName;
-      ticket.status = nextStatus;
-      ticket.updatedAt = now;
-      return { ticket };
+      console.error("assignTicketToAgent error:", error);
+      return { error: `Database update failed: ${error.message}` };
     }
     await loadUserDirectory();
     return { ticket: mapTicket(data) };
-  } catch (_) {
-    ticket.assignedAgentId = agentId;
-    ticket.assignedAgentName = agentName;
-    ticket.status = nextStatus;
-    ticket.updatedAt = now;
-    return { ticket };
+  } catch (err) {
+    console.error("assignTicketToAgent exception:", err);
+    return { error: err instanceof Error ? err.message : "Failed to assign ticket in database." };
   }
 }
 

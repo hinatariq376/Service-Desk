@@ -38,7 +38,7 @@ interface TicketContextValue {
   }) => Promise<Ticket>;
   transitionStatus: (ticket: Ticket, next: TicketStatus) => Promise<{ error?: string }>;
   changePriority: (ticket: Ticket, priority: Priority) => Promise<{ error?: string }>;
-  assignAgent: (ticket: Ticket, agent: User) => Promise<{ error?: string }>;
+  assignAgent: (ticket: Ticket, agent: User | null) => Promise<{ error?: string }>;
   postComment: (ticketId: string, content: string, isInternal: boolean) => Promise<void>;
 }
 
@@ -89,17 +89,28 @@ export function TicketProvider({ children }: { children: ReactNode }) {
     if (!user) return;
 
     const channel = supabase
-      .channel(`service-desk-${user.id}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "tickets" }, () => {
+      .channel(`service-desk-live-${user.id}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "tickets" }, (payload) => {
+        console.log("Realtime ticket update received:", payload);
         refresh();
       })
-      .on("postgres_changes", { event: "*", schema: "public", table: "ticket_comments" }, () => {
+      .on("postgres_changes", { event: "*", schema: "public", table: "ticket_comments" }, (payload) => {
+        console.log("Realtime comment update received:", payload);
+        refresh();
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "users" }, () => {
         refresh();
       })
       .on("postgres_changes", { event: "*", schema: "public", table: "audit_logs" }, () => {
         if (user.role === "ADMIN") refresh();
       })
-      .subscribe();
+      .subscribe((status, err) => {
+        if (status === "SUBSCRIBED") {
+          console.log("Supabase Realtime connected successfully for user:", user.email);
+        } else if (status === "CHANNEL_ERROR") {
+          console.warn("Supabase Realtime channel error:", err);
+        }
+      });
 
     return () => {
       supabase.removeChannel(channel);
@@ -143,9 +154,9 @@ export function TicketProvider({ children }: { children: ReactNode }) {
   );
 
   const assignAgent = useCallback(
-    async (ticket: Ticket, agent: User) => {
+    async (ticket: Ticket, agent: User | null) => {
       if (!user) return { error: "Not authenticated." };
-      const result = await assignTicketToAgent(user, ticket, agent.id, agent.name);
+      const result = await assignTicketToAgent(user, ticket, agent ? agent.id : null, agent ? agent.name : undefined);
       if (!result.error) await refresh();
       return result;
     },

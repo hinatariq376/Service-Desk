@@ -17,7 +17,7 @@ export async function fetchSupportAgents(): Promise<User[]> {
     const { data, error } = await supabase
       .from("users")
       .select("*")
-      .eq("role", "SUPPORT_AGENT")
+      .or("role.eq.SUPPORT_AGENT,role.eq.support_agent,role.ilike.SUPPORT_AGENT")
       .order("name");
     if (error) throw new Error(error.message);
     if (data && data.length > 0) return data.map(mapUser);

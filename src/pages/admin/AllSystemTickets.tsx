@@ -38,8 +38,7 @@ export default function AllSystemTickets({ tickets }: AllSystemTicketsProps) {
   };
 
   const handleAssign = async (ticket: Ticket, agentId: string) => {
-    const agent = agents.find((a) => a.id === agentId);
-    if (!agent) return;
+    const agent = agentId ? agents.find((a) => a.id === agentId) || null : null;
     setAssignError("");
     setAssigningId(ticket.id);
     const result = await assignAgent(ticket, agent);

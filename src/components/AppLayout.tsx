@@ -38,10 +38,7 @@ export default function AppLayout({
 }: AppLayoutProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const notifCount = navItems.reduce((acc, n) => {
-    if (typeof n.badge === "number") return acc + n.badge;
-    return acc;
-  }, 0);
+
 
   return (
     <div className="flex flex-col md:flex-row h-screen bg-slate-50 overflow-hidden w-full">
@@ -126,7 +123,7 @@ export default function AppLayout({
 
       {/* 4. Main Content Area */}
       <div className="flex-1 min-w-0 flex flex-col overflow-hidden w-full">
-        <TopBar user={user} title={title} onLogout={onLogout} notificationCount={notifCount} />
+        <TopBar user={user} title={title} onLogout={onLogout} />
         {error && (
           <div className="px-4 md:px-6 py-2 bg-red-50 border-b border-red-200 flex items-center gap-2 text-xs text-red-300 shrink-0">
             <AlertCircle className="w-3.5 h-3.5 shrink-0" />

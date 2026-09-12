@@ -440,10 +440,15 @@ export async function fetchAuditLogs(): Promise<AuditLog[]> {
       .order("created_at", { ascending: false })
       .limit(200);
 
-    if (error) throw new Error(error.message);
+    if (error) {
+      console.warn("fetchAuditLogs error:", error.message);
+      return [];
+    }
     if (data && data.length > 0) return data.map(mapAuditLog);
-  } catch (_) {}
-  return MOCK_AUDIT_LOGS;
+  } catch (err) {
+    console.warn("fetchAuditLogs exception:", err);
+  }
+  return [];
 }
 
 export async function refreshSLABreaches(tickets: Ticket[]) {

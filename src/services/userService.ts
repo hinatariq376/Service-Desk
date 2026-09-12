@@ -70,3 +70,26 @@ export async function updateUserRole(userId: string, role: Role) {
     if (user) user.role = role;
   }
 }
+
+export async function updatePassword(newPassword: string): Promise<{ error?: string }> {
+  try {
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    if (error) return { error: error.message };
+    return {};
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Password update failed." };
+  }
+}
+
+export async function updateUserDisplayName(
+  id: string,
+  name: string,
+): Promise<{ error?: string }> {
+  try {
+    const { error } = await supabase.from("users").update({ name }).eq("id", id);
+    if (error) return { error: error.message };
+    return {};
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Profile update failed." };
+  }
+}

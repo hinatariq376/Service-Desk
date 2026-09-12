@@ -32,18 +32,23 @@ export default function AgentQueue() {
   if (!user) return null;
 
   const assignedToMe = tickets.filter((t) => t.assignedAgentId === user.id);
+  // Active Work: my assigned active tickets + unassigned tickets any agent can pick up
   const activeAssigned = assignedToMe.filter((t) => !["RESOLVED", "CLOSED"].includes(t.status));
+  const unassignedOpen = tickets.filter(
+    (t) => !t.assignedAgentId && !["RESOLVED", "CLOSED"].includes(t.status),
+  );
+  const activeWork = sortByPriority([...activeAssigned, ...unassignedOpen]);
   const slaBreached = assignedToMe.filter((t) => t.slaBreach || new Date(t.slaDeadline) < new Date());
 
   const VIEW_TICKETS: Record<QueueView, Ticket[]> = {
     assigned: sortByPriority(assignedToMe),
-    active: sortByPriority(activeAssigned),
+    active: activeWork,
     breach: sortByPriority(slaBreached),
   };
 
   const EMPTY_MSGS: Record<QueueView, string> = {
-    assigned: "No tickets assigned to you. An admin can assign incoming tickets from the triage queue.",
-    active: "No active in-progress tickets assigned to you.",
+    assigned: "No tickets are assigned to you yet. Check Active Work to pick up open tickets.",
+    active: "No active tickets in the work queue.",
     breach: "Zero SLA breaches across your assigned work.",
   };
 
@@ -52,7 +57,7 @@ export default function AgentQueue() {
 
   const navItems = [
     { icon: UserCheck, label: "Assigned to Me", pageId: "assigned", badge: assignedToMe.length },
-    { icon: AlertTriangle, label: "Active Work", pageId: "active", badge: activeAssigned.length },
+    { icon: AlertTriangle, label: "Active Work", pageId: "active", badge: activeWork.length },
     { icon: ClockIcon, label: "SLA Breached", pageId: "breach", badge: slaBreached.length },
   ];
 

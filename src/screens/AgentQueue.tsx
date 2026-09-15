@@ -57,7 +57,7 @@ export default function AgentQueue() {
           <div className="my-5 p-3.5 bg-amber-50/80 border border-amber-200 rounded-xl text-xs text-amber-800 text-left space-y-1">
             <p className="font-bold">Next Steps:</p>
             <p>1. An administrator must verify and approve your agent account on the Admin Dashboard.</p>
-            <p>2. Once approved, you will receive a confirmation email and gain full access to ticket queues.</p>
+            <p>2. Once approved by an administrator, you will gain full access to ticket queues upon sign in.</p>
           </div>
           <div className="flex flex-col sm:flex-row gap-2.5">
             <button

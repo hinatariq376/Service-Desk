@@ -18,7 +18,6 @@ import {
   UserCheck,
 } from "lucide-react";
 import { fetchAllUsers, approveAgent } from "../../services/userService";
-import { sendAgentApprovalEmail } from "../../services/emailService";
 import { useAuth } from "../../context/AuthContext";
 import type { User as UserType, Role } from "../../types";
 
@@ -319,14 +318,7 @@ export default function UserManagement() {
       const res = await approveAgent(targetUser.id);
       if (res.error) throw new Error(res.error);
 
-      // Trigger email confirmation
-      await sendAgentApprovalEmail({
-        to: targetUser.email,
-        agentName: targetUser.name,
-        adminName: currentAdmin?.name || "Administrator",
-      });
-
-      setSuccessMsg(`Support Agent "${targetUser.name}" has been approved! A confirmation email was sent to ${targetUser.email}.`);
+      setSuccessMsg(`Support Agent "${targetUser.name}" has been approved in the database! They now have full access to sign in.`);
       loadUsers();
       setTimeout(() => setSuccessMsg(""), 6000);
     } catch (err) {

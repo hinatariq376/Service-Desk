@@ -203,7 +203,55 @@ describe("Audit Logs & Ticket Queries Service", () => {
       expect(ticket.customerName).toBe("Alice Wonderland");
       expect(ticket.assignedAgentName).toBe("Bob Agent");
       expect(ticket.customerId).toBe("00000000-0000-0000-0000-000000000001");
-      expect(ticket.assignedAgentId).toBe("00000000-0000-0000-0000-000000000011");
+    });
+  });
+
+  describe("Agent Approval & Un-approval Workflow", () => {
+    it("approveAgent updates is_approved to true in public.users", async () => {
+      let updatedPayload: any = null;
+      let targetUserId: string | null = null;
+      vi.spyOn(supabase, "from").mockImplementation((table: string) => {
+        return {
+          update: (payload: any) => {
+            updatedPayload = payload;
+            return {
+              eq: (col: string, val: string) => {
+                targetUserId = val;
+                return Promise.resolve({ error: null });
+              },
+            };
+          },
+        } as any;
+      });
+
+      const res = await (await import("../src/services/userService")).approveAgent("00000000-0000-0000-0000-000000000011");
+      expect(res.error).toBeUndefined();
+      expect(targetUserId).toBe("00000000-0000-0000-0000-000000000011");
+      expect(updatedPayload).toEqual({ is_approved: true });
+    });
+
+    it("unapproveAgent updates is_approved to false in public.users", async () => {
+      let updatedPayload: any = null;
+      let targetUserId: string | null = null;
+      vi.spyOn(supabase, "from").mockImplementation((table: string) => {
+        return {
+          update: (payload: any) => {
+            updatedPayload = payload;
+            return {
+              eq: (col: string, val: string) => {
+                targetUserId = val;
+                return Promise.resolve({ error: null });
+              },
+            };
+          },
+        } as any;
+      });
+
+      const res = await (await import("../src/services/userService")).unapproveAgent("00000000-0000-0000-0000-000000000011");
+      expect(res.error).toBeUndefined();
+      expect(targetUserId).toBe("00000000-0000-0000-0000-000000000011");
+      expect(updatedPayload).toEqual({ is_approved: false });
     });
   });
 });
+

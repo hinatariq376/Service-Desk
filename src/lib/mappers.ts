@@ -12,15 +12,29 @@ export function getUserName(id: string | null | undefined): string | undefined {
   return userCache.get(id)?.name;
 }
 
-export function mapUser(row: DbUser): User {
+export function mapUser(row: DbUser | any): User {
   userCache.set(row.id, row);
+  let approvalStatus: "PENDING" | "APPROVED" | "DENIED" = "PENDING";
+  if (row.approval_status === "APPROVED" || row.approval_status === "DENIED" || row.approval_status === "PENDING") {
+    approvalStatus = row.approval_status;
+  } else if (row.is_approved === true) {
+    approvalStatus = "APPROVED";
+  } else if (row.is_approved === false) {
+    approvalStatus = "PENDING";
+  } else if (row.role !== "SUPPORT_AGENT") {
+    approvalStatus = "APPROVED";
+  }
+
+  const isApproved = approvalStatus === "APPROVED";
+
   return {
     id: row.id,
     name: row.name,
     email: row.email,
     role: row.role as Role,
     avatar: row.avatar ?? undefined,
-    isApproved: row.is_approved ?? (row.role !== "SUPPORT_AGENT"),
+    isApproved,
+    approvalStatus,
   };
 }
 

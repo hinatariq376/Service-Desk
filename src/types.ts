@@ -18,6 +18,7 @@ export interface User {
   role: Role;
   avatar?: string;
   isApproved?: boolean;
+  approvalStatus?: "PENDING" | "APPROVED" | "DENIED";
 }
 
 export interface Ticket {

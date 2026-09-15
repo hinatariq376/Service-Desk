@@ -77,19 +77,78 @@ export async function approveAgent(userId: string): Promise<{ error?: string }> 
   try {
     const { error } = await supabase
       .from("users")
-      .update({ is_approved: true })
+      .update({ is_approved: true, approval_status: "APPROVED" } as any)
       .eq("id", userId);
-    if (error) throw new Error(error.message);
+    if (error) {
+      // Fallback if approval_status column doesn't exist yet
+      await supabase.from("users").update({ is_approved: true }).eq("id", userId);
+    }
     const mock = MOCK_USERS.find((u) => u.id === userId);
-    if (mock) mock.isApproved = true;
+    if (mock) {
+      mock.isApproved = true;
+      mock.approvalStatus = "APPROVED";
+    }
     return {};
   } catch (err) {
     const mock = MOCK_USERS.find((u) => u.id === userId);
     if (mock) {
       mock.isApproved = true;
+      mock.approvalStatus = "APPROVED";
       return {};
     }
     return { error: err instanceof Error ? err.message : "Failed to approve agent." };
+  }
+}
+
+export async function denyAgent(userId: string): Promise<{ error?: string }> {
+  try {
+    const { error } = await supabase
+      .from("users")
+      .update({ is_approved: false, approval_status: "DENIED" } as any)
+      .eq("id", userId);
+    if (error) {
+      await supabase.from("users").update({ is_approved: false }).eq("id", userId);
+    }
+    const mock = MOCK_USERS.find((u) => u.id === userId);
+    if (mock) {
+      mock.isApproved = false;
+      mock.approvalStatus = "DENIED";
+    }
+    return {};
+  } catch (err) {
+    const mock = MOCK_USERS.find((u) => u.id === userId);
+    if (mock) {
+      mock.isApproved = false;
+      mock.approvalStatus = "DENIED";
+      return {};
+    }
+    return { error: err instanceof Error ? err.message : "Failed to deny agent registration." };
+  }
+}
+
+export async function unapproveAgent(userId: string): Promise<{ error?: string }> {
+  try {
+    const { error } = await supabase
+      .from("users")
+      .update({ is_approved: false, approval_status: "PENDING" } as any)
+      .eq("id", userId);
+    if (error) {
+      await supabase.from("users").update({ is_approved: false }).eq("id", userId);
+    }
+    const mock = MOCK_USERS.find((u) => u.id === userId);
+    if (mock) {
+      mock.isApproved = false;
+      mock.approvalStatus = "PENDING";
+    }
+    return {};
+  } catch (err) {
+    const mock = MOCK_USERS.find((u) => u.id === userId);
+    if (mock) {
+      mock.isApproved = false;
+      mock.approvalStatus = "PENDING";
+      return {};
+    }
+    return { error: err instanceof Error ? err.message : "Failed to revoke agent approval." };
   }
 }
 

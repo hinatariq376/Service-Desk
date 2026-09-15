@@ -20,8 +20,8 @@ export default function AllSystemTickets({ tickets }: AllSystemTicketsProps) {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<TicketStatus | "ALL">("ALL");
   const [priorityFilter, setPriorityFilter] = useState<Priority | "ALL">("ALL");
-  const [sortKey, setSortKey] = useState<SortKey>("priority");
-  const [sortAsc, setSortAsc] = useState(true);
+  const [sortKey, setSortKey] = useState<SortKey>("createdAt");
+  const [sortAsc, setSortAsc] = useState(false);
   const [assigningId, setAssigningId] = useState<string | null>(null);
   const [assignError, setAssignError] = useState("");
 

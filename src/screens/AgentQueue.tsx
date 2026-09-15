@@ -32,8 +32,10 @@ export default function AgentQueue() {
 
   if (!user) return null;
 
-  // Restrict unapproved agents
-  if (user.role === "SUPPORT_AGENT" && user.isApproved === false) {
+  // Restrict unapproved / denied agents
+  if (user.role === "SUPPORT_AGENT" && (user.isApproved === false || user.approvalStatus === "DENIED")) {
+    const isDenied = user.approvalStatus === "DENIED";
+
     const handleCheckStatus = async () => {
       setRefreshingStatus(true);
       try {
@@ -47,17 +49,34 @@ export default function AgentQueue() {
     return (
       <div className="min-h-screen bg-slate-100 flex items-center justify-center p-4">
         <div className="max-w-md w-full bg-white border border-slate-200 rounded-2xl shadow-xl p-6 sm:p-8 text-center animate-fade-up">
-          <div className="w-16 h-16 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center mx-auto mb-4 text-amber-600">
+          <div className={`w-16 h-16 rounded-2xl border flex items-center justify-center mx-auto mb-4 ${
+            isDenied ? "bg-red-50 border-red-200 text-red-600" : "bg-amber-50 border-amber-200 text-amber-600"
+          }`}>
             <ShieldAlert className="w-8 h-8" />
           </div>
-          <h2 className="text-xl font-bold text-slate-900">Account Pending Approval</h2>
+          <h2 className="text-xl font-bold text-slate-900">
+            {isDenied ? "Account Registration Denied" : "Account Pending Approval"}
+          </h2>
           <p className="text-xs sm:text-sm text-slate-600 mt-2 leading-relaxed">
-            Welcome, <strong>{user.name}</strong>. Your Support Agent account has been registered and is currently awaiting administrator approval.
+            Welcome, <strong>{user.name}</strong>. {isDenied
+              ? "Your Support Agent account registration has been reviewed and denied by an administrator."
+              : "Your Support Agent account has been registered and is currently awaiting administrator approval."}
           </p>
-          <div className="my-5 p-3.5 bg-amber-50/80 border border-amber-200 rounded-xl text-xs text-amber-800 text-left space-y-1">
-            <p className="font-bold">Next Steps:</p>
-            <p>1. An administrator must verify and approve your agent account on the Admin Dashboard.</p>
-            <p>2. Once approved by an administrator, you will gain full access to ticket queues upon sign in.</p>
+          <div className={`my-5 p-3.5 border rounded-xl text-xs text-left space-y-1 ${
+            isDenied ? "bg-red-50/80 border-red-200 text-red-800" : "bg-amber-50/80 border-amber-200 text-amber-800"
+          }`}>
+            <p className="font-bold">{isDenied ? "Status Notice:" : "Next Steps:"}</p>
+            {isDenied ? (
+              <>
+                <p>1. An administrator has denied access for this agent account.</p>
+                <p>2. Please contact your system administrator if you require this decision to be re-evaluated.</p>
+              </>
+            ) : (
+              <>
+                <p>1. An administrator must verify and approve your agent account on the Admin Dashboard.</p>
+                <p>2. Once approved by an administrator, you will gain immediate access to all ticket queues.</p>
+              </>
+            )}
           </div>
           <div className="flex flex-col sm:flex-row gap-2.5">
             <button

@@ -61,14 +61,8 @@ export async function upsertUserProfile(params: {
   }
 }
 
-export async function updateUserRole(userId: string, role: Role) {
-  try {
-    const { error } = await supabase.from("users").update({ role }).eq("id", userId);
-    if (error) throw new Error(error.message);
-  } catch (_) {
-    const user = MOCK_USERS.find((u) => u.id === userId);
-    if (user) user.role = role;
-  }
+export async function updateUserRole(_userId: string, _role: Role) {
+  throw new Error("Changing user roles is disabled.");
 }
 
 export async function updatePassword(newPassword: string): Promise<{ error?: string }> {

@@ -14,7 +14,7 @@ import {
   Mail,
   Calendar,
 } from "lucide-react";
-import { fetchAllUsers, updateUserRole } from "../../services/userService";
+import { fetchAllUsers } from "../../services/userService";
 import { useAuth } from "../../context/AuthContext";
 import type { User as UserType, Role } from "../../types";
 
@@ -198,34 +198,11 @@ function InviteModal({ onClose, onSuccess }: InviteModalProps) {
 interface ProfileModalProps {
   user: UserType;
   onClose: () => void;
-  onRoleChange: (userId: string, role: Role) => Promise<void>;
 }
 
-function UserProfileModal({ user, onClose, onRoleChange }: ProfileModalProps) {
-  const [selectedRole, setSelectedRole] = useState<Role>(user.role);
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
-  const [error, setError] = useState("");
-
+function UserProfileModal({ user, onClose }: ProfileModalProps) {
   const cfg = ROLE_CONFIG[user.role] || ROLE_CONFIG.CUSTOMER;
   const Icon = cfg.icon;
-
-  const handleRoleChange = async () => {
-    if (selectedRole === user.role) return;
-    setSaving(true);
-    setError("");
-    try {
-      await onRoleChange(user.id, selectedRole);
-      setSaved(true);
-      setTimeout(() => {
-        onClose();
-      }, 1000);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update role.");
-    } finally {
-      setSaving(false);
-    }
-  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
@@ -263,7 +240,7 @@ function UserProfileModal({ user, onClose, onRoleChange }: ProfileModalProps) {
               <span
                 className={`inline-flex items-center gap-1 mt-1 text-[10px] font-bold px-2 py-0.5 rounded-md border ${cfg.bg} ${cfg.color}`}
               >
-                <Icon className="w-3 h-3" />
+                <Icon className="w-3.5 h-3.5" />
                 {cfg.label}
               </span>
             </div>
@@ -281,62 +258,13 @@ function UserProfileModal({ user, onClose, onRoleChange }: ProfileModalProps) {
             </div>
           </div>
 
-          {/* Role change */}
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">
-              Change Role
-            </label>
-            <div className="grid grid-cols-3 gap-2">
-              {(["SUPPORT_AGENT", "CUSTOMER", "ADMIN"] as Role[]).map((r) => {
-                const rcfg = ROLE_CONFIG[r];
-                const RIcon = rcfg.icon;
-                return (
-                  <button
-                    key={r}
-                    type="button"
-                    onClick={() => setSelectedRole(r)}
-                    className={`flex flex-col items-center gap-1 py-2 px-1 rounded-lg text-[11px] font-medium transition-all border ${
-                      selectedRole === r
-                        ? "bg-indigo-600 text-white border-indigo-600 shadow-md"
-                        : "text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50"
-                    }`}
-                  >
-                    <RIcon className="w-3.5 h-3.5" />
-                    {rcfg.label.split(" ")[0]}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {error && (
-            <div className="flex items-center gap-2 text-xs text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
-              <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-              {error}
-            </div>
-          )}
-          {saved && (
-            <div className="flex items-center gap-2 text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
-              <Check className="w-3.5 h-3.5 shrink-0" />
-              Role updated successfully!
-            </div>
-          )}
-
-          <div className="flex gap-3">
+          <div className="flex gap-3 pt-2">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-2 rounded-lg text-sm font-semibold text-slate-700 border border-slate-300 hover:bg-slate-50 transition-all"
+              className="w-full py-2.5 rounded-lg text-sm font-semibold text-slate-700 border border-slate-300 hover:bg-slate-50 transition-all"
             >
               Close
-            </button>
-            <button
-              type="button"
-              onClick={handleRoleChange}
-              disabled={saving || saved || selectedRole === user.role}
-              className="flex-1 py-2 rounded-lg text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 transition-all"
-            >
-              {saving ? "Saving…" : "Update Role"}
             </button>
           </div>
         </div>
@@ -376,13 +304,6 @@ export default function UserManagement() {
     loadUsers();
   }, []);
 
-  const handleRoleChange = async (userId: string, role: Role) => {
-    await updateUserRole(userId, role);
-    // Refresh list
-    const updated = await fetchAllUsers().catch(() => users);
-    setUsers(updated);
-  };
-
   const filtered = users.filter((u) => {
     const searchLower = search.toLowerCase();
     const matchSearch =
@@ -407,7 +328,6 @@ export default function UserManagement() {
         <UserProfileModal
           user={viewUser}
           onClose={() => setViewUser(null)}
-          onRoleChange={handleRoleChange}
         />
       )}
 
@@ -557,19 +477,25 @@ export default function UserManagement() {
                                 <MoreHorizontal className="w-4 h-4" />
                               </button>
                               {openMenu === u.id && (
-                                <div className="absolute right-0 top-9 z-20 w-44 bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden animate-fade-up">
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      setViewUser(u);
-                                      setOpenMenu(null);
-                                    }}
-                                    className="w-full flex items-center gap-2 px-3 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
-                                  >
-                                    <Eye className="w-3.5 h-3.5 text-indigo-600" />
-                                    View Profile
-                                  </button>
-                                </div>
+                                <>
+                                  <div
+                                    className="fixed inset-0 z-10"
+                                    onClick={() => setOpenMenu(null)}
+                                  />
+                                  <div className="absolute right-0 top-9 z-20 w-44 bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden animate-fade-up">
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setViewUser(u);
+                                        setOpenMenu(null);
+                                      }}
+                                      className="w-full flex items-center gap-2 px-3 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+                                    >
+                                      <Eye className="w-3.5 h-3.5 text-indigo-600" />
+                                      View Profile
+                                    </button>
+                                  </div>
+                                </>
                               )}
                             </div>
                           </td>

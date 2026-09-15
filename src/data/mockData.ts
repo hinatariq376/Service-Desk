@@ -1,10 +1,10 @@
 import type { Ticket, Message, AuditLog, User } from "../types";
 
 export const MOCK_USERS: User[] = [
-  { id: "u1", name: "Hina Tariq", email: "hina@example.com", role: "CUSTOMER" },
-  { id: "u2", name: "Alex Chen", email: "alex@support.com", role: "SUPPORT_AGENT" },
-  { id: "u3", name: "Sara Mills", email: "sara@support.com", role: "SUPPORT_AGENT" },
-  { id: "u4", name: "Omar Farooq", email: "omar@admin.com", role: "ADMIN" },
+  { id: "u1", name: "Hina Tariq", email: "hina@example.com", role: "CUSTOMER", isApproved: true },
+  { id: "u2", name: "Alex Chen", email: "alex@support.com", role: "SUPPORT_AGENT", isApproved: true },
+  { id: "u3", name: "Sara Mills", email: "sara@support.com", role: "SUPPORT_AGENT", isApproved: true },
+  { id: "u4", name: "Omar Farooq", email: "omar@admin.com", role: "ADMIN", isApproved: true },
 ];
 
 const now = new Date();

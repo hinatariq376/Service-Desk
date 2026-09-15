@@ -101,6 +101,9 @@ export function TicketProvider({ children }: { children: ReactNode }) {
       .on("postgres_changes", { event: "*", schema: "public", table: "users" }, () => {
         refresh();
       })
+      .on("postgres_changes", { event: "*", schema: "public", table: "activity_logs" }, () => {
+        if (user.role === "ADMIN") refresh();
+      })
       .on("postgres_changes", { event: "*", schema: "public", table: "audit_logs" }, () => {
         if (user.role === "ADMIN") refresh();
       })

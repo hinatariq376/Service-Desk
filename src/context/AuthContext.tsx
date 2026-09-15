@@ -89,6 +89,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           name: params.name,
           email: params.email,
           role: params.role,
+          isApproved: params.role !== "SUPPORT_AGENT",
         });
       } catch (profileError) {
         const message = profileError instanceof Error ? profileError.message : "Profile creation failed.";

@@ -17,6 +17,7 @@ export interface User {
   email: string;
   role: Role;
   avatar?: string;
+  isApproved?: boolean;
 }
 
 export interface Ticket {

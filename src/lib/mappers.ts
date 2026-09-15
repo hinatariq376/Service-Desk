@@ -1,4 +1,4 @@
-import type { DbAuditLog, DbComment, DbTicket, DbUser } from "./database.types";
+import type { DbActivityLog, DbAuditLog, DbComment, DbTicket, DbUser } from "./database.types";
 import type { AuditLog, Message, Priority, Role, Ticket, TicketStatus, User } from "../types";
 
 const userCache = new Map<string, DbUser>();
@@ -20,6 +20,7 @@ export function mapUser(row: DbUser): User {
     email: row.email,
     role: row.role as Role,
     avatar: row.avatar ?? undefined,
+    isApproved: row.is_approved ?? (row.role !== "SUPPORT_AGENT"),
   };
 }
 
@@ -34,9 +35,27 @@ export function formatTicketId(id: string): string {
   return `TCK-${id.replace(/-/g, "").slice(0, 8).toUpperCase()}`;
 }
 
-export function mapTicket(row: DbTicket): Ticket {
+export interface JoinedTicketRow extends DbTicket {
+  customer?: { id: string; name: string; email?: string; role?: string; avatar?: string | null } | null;
+  assigned_agent?: { id: string; name: string; email?: string; role?: string; avatar?: string | null } | null;
+}
+
+export function mapTicket(row: DbTicket | JoinedTicketRow | any): Ticket {
+  if (row.customer && row.customer.id) {
+    userCache.set(row.customer.id, row.customer as DbUser);
+  }
+  if (row.assigned_agent && row.assigned_agent.id) {
+    userCache.set(row.assigned_agent.id, row.assigned_agent as DbUser);
+  }
+
   const resolutionDeadline =
     row.sla_resolution_deadline ?? row.sla_deadline ?? new Date().toISOString();
+
+  const customerName =
+    row.customer?.name ?? (row.customer_id ? getUserName(row.customer_id) : undefined) ?? "Unknown Customer";
+
+  const assignedAgentName =
+    row.assigned_agent?.name ?? (row.assigned_agent_id ? getUserName(row.assigned_agent_id) : undefined);
 
   return {
     id: row.id,
@@ -47,9 +66,9 @@ export function mapTicket(row: DbTicket): Ticket {
     priority: row.priority as Priority,
     status: row.status as TicketStatus,
     customerId: row.customer_id,
-    customerName: getUserName(row.customer_id) ?? "Unknown Customer",
+    customerName,
     assignedAgentId: row.assigned_agent_id ?? undefined,
-    assignedAgentName: getUserName(row.assigned_agent_id),
+    assignedAgentName,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     slaResponseDeadline: row.sla_response_deadline ?? undefined,
@@ -74,16 +93,17 @@ export function mapComment(row: DbComment, author?: DbUser | null): Message {
   };
 }
 
-export function mapAuditLog(row: DbAuditLog): AuditLog {
+export function mapAuditLog(row: DbAuditLog | DbActivityLog | any): AuditLog {
   return {
     id: row.id,
     timestamp: row.created_at,
     actorName: row.actor_name,
-    actorRole: row.actor_role as Role,
+    actorRole: (row.actor_role as Role) || "CUSTOMER",
     action: row.action,
-    entityId: row.entity_id,
+    entityId: row.entity_id ?? "",
     entityType: row.entity_type,
     oldValue: (row.old_value as Record<string, unknown>) ?? undefined,
     newValue: (row.new_value as Record<string, unknown>) ?? undefined,
   };
 }
+

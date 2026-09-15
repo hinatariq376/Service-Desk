@@ -24,7 +24,11 @@ export async function getTickets(userId?: string, userRole?: string): Promise<Ti
 
     let query = supabase
       .from("tickets")
-      .select("*")
+      .select(`
+        *,
+        customer:users!customer_id (id, name, email, role, avatar),
+        assigned_agent:users!assigned_agent_id (id, name, email, role, avatar)
+      `)
       .or("is_deleted.is.null,is_deleted.eq.false")
       .is("deleted_at", null)
       .order("created_at", { ascending: false });
@@ -38,8 +42,27 @@ export async function getTickets(userId?: string, userRole?: string): Promise<Ti
       }
     }
 
-    const { data, error } = await query;
-    if (error) throw new Error(error.message);
+    let { data, error } = await query;
+    if (error) {
+      // Fallback to select("*") if foreign key relationship query fails in mock or test environments
+      const fallbackQuery = supabase
+        .from("tickets")
+        .select("*")
+        .or("is_deleted.is.null,is_deleted.eq.false")
+        .is("deleted_at", null)
+        .order("created_at", { ascending: false });
+
+      if (userRole === "customer" || normalizedRole === "customer") {
+        (fallbackQuery as any).eq("customer_id", userId);
+      } else if (userRole === "support_agent" || normalizedRole === "support_agent") {
+        if (userId) {
+          (fallbackQuery as any).or(`assigned_agent_id.eq.${userId},assigned_agent_id.is.null`);
+        }
+      }
+      const res = await fallbackQuery;
+      if (res.error) throw new Error(res.error.message);
+      data = res.data;
+    }
     if (data && data.length > 0) {
       return data.map(mapTicket);
     }
@@ -434,22 +457,35 @@ export async function softDeleteTicket(
 
 export async function fetchAuditLogs(): Promise<AuditLog[]> {
   try {
-    const { data, error } = await supabase
+    // 1. Query public.activity_logs
+    const { data: activityData, error: activityError } = await supabase
+      .from("activity_logs")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(200);
+
+    if (!activityError && activityData && activityData.length > 0) {
+      return activityData.map(mapAuditLog);
+    }
+
+    // 2. Fallback to audit_logs
+    const { data: auditData, error: auditError } = await supabase
       .from("audit_logs")
       .select("*")
       .order("created_at", { ascending: false })
       .limit(200);
 
-    if (error) {
-      console.warn("fetchAuditLogs error:", error.message);
-      return [];
+    if (!auditError && auditData && auditData.length > 0) {
+      return auditData.map(mapAuditLog);
     }
-    if (data && data.length > 0) return data.map(mapAuditLog);
   } catch (err) {
     console.warn("fetchAuditLogs exception:", err);
   }
   return [];
 }
+
+export const getAuditLogs = fetchAuditLogs;
+
 
 export async function refreshSLABreaches(tickets: Ticket[]) {
   const overdue = tickets.filter((t) => isSLABreached(t.slaDeadline, t.slaBreach) && !t.slaBreach);

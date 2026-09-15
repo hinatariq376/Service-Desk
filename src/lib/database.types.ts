@@ -10,6 +10,7 @@ export interface Database {
           email: string;
           role: "CUSTOMER" | "SUPPORT_AGENT" | "ADMIN";
           avatar: string | null;
+          is_approved?: boolean;
           created_at: string;
           updated_at?: string;
         };
@@ -19,6 +20,7 @@ export interface Database {
           email: string;
           role: "CUSTOMER" | "SUPPORT_AGENT" | "ADMIN";
           avatar?: string | null;
+          is_approved?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -28,6 +30,7 @@ export interface Database {
           email?: string;
           role?: "CUSTOMER" | "SUPPORT_AGENT" | "ADMIN";
           avatar?: string | null;
+          is_approved?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -131,7 +134,7 @@ export interface Database {
           actor_name: string;
           actor_role: string;
           action: string;
-          entity_id: string;
+          entity_id: string | null;
           entity_type: string;
           old_value: Json | null;
           new_value: Json | null;
@@ -143,7 +146,7 @@ export interface Database {
           actor_name: string;
           actor_role: string;
           action: string;
-          entity_id: string;
+          entity_id?: string | null;
           entity_type: string;
           old_value?: Json | null;
           new_value?: Json | null;
@@ -155,7 +158,46 @@ export interface Database {
           actor_name?: string;
           actor_role?: string;
           action?: string;
-          entity_id?: string;
+          entity_id?: string | null;
+          entity_type?: string;
+          old_value?: Json | null;
+          new_value?: Json | null;
+        };
+        Relationships: [];
+      };
+      activity_logs: {
+        Row: {
+          id: string;
+          created_at: string;
+          actor_id: string | null;
+          actor_name: string;
+          actor_role: string;
+          action: string;
+          entity_id: string | null;
+          entity_type: string;
+          old_value: Json | null;
+          new_value: Json | null;
+        };
+        Insert: {
+          id?: string;
+          created_at?: string;
+          actor_id?: string | null;
+          actor_name: string;
+          actor_role: string;
+          action: string;
+          entity_id?: string | null;
+          entity_type: string;
+          old_value?: Json | null;
+          new_value?: Json | null;
+        };
+        Update: {
+          id?: string;
+          created_at?: string;
+          actor_id?: string | null;
+          actor_name?: string;
+          actor_role?: string;
+          action?: string;
+          entity_id?: string | null;
           entity_type?: string;
           old_value?: Json | null;
           new_value?: Json | null;
@@ -215,3 +257,4 @@ export type DbUser = Database["public"]["Tables"]["users"]["Row"];
 export type DbTicket = Database["public"]["Tables"]["tickets"]["Row"];
 export type DbComment = Database["public"]["Tables"]["ticket_comments"]["Row"];
 export type DbAuditLog = Database["public"]["Tables"]["audit_logs"]["Row"];
+export type DbActivityLog = Database["public"]["Tables"]["activity_logs"]["Row"];

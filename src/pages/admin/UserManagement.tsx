@@ -13,8 +13,12 @@ import {
   AlertCircle,
   Mail,
   Calendar,
+  Clock,
+  CheckCircle2,
+  UserCheck,
 } from "lucide-react";
-import { fetchAllUsers } from "../../services/userService";
+import { fetchAllUsers, approveAgent } from "../../services/userService";
+import { sendAgentApprovalEmail } from "../../services/emailService";
 import { useAuth } from "../../context/AuthContext";
 import type { User as UserType, Role } from "../../types";
 
@@ -277,14 +281,17 @@ function UserProfileModal({ user, onClose }: ProfileModalProps) {
 // Main UserManagement component
 // ---------------------------------------------------------------------------
 export default function UserManagement() {
+  const { user: currentAdmin } = useAuth();
   const [users, setUsers] = useState<UserType[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [filterRole, setFilterRole] = useState<Role | "ALL">("ALL");
+  const [filterRole, setFilterRole] = useState<Role | "ALL" | "PENDING_APPROVAL">("ALL");
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
   const [showInvite, setShowInvite] = useState(false);
   const [viewUser, setViewUser] = useState<UserType | null>(null);
+  const [approvingId, setApprovingId] = useState<string | null>(null);
 
   const loadUsers = () => {
     fetchAllUsers()
@@ -304,11 +311,42 @@ export default function UserManagement() {
     loadUsers();
   }, []);
 
+  const handleApprove = async (targetUser: UserType) => {
+    setApprovingId(targetUser.id);
+    setError("");
+    setSuccessMsg("");
+    try {
+      const res = await approveAgent(targetUser.id);
+      if (res.error) throw new Error(res.error);
+
+      // Trigger email confirmation
+      await sendAgentApprovalEmail({
+        to: targetUser.email,
+        agentName: targetUser.name,
+        adminName: currentAdmin?.name || "Administrator",
+      });
+
+      setSuccessMsg(`Support Agent "${targetUser.name}" has been approved! A confirmation email was sent to ${targetUser.email}.`);
+      loadUsers();
+      setTimeout(() => setSuccessMsg(""), 6000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to approve agent.");
+    } finally {
+      setApprovingId(null);
+    }
+  };
+
+  const pendingAgents = users.filter((u) => u.role === "SUPPORT_AGENT" && u.isApproved === false);
+
   const filtered = users.filter((u) => {
     const searchLower = search.toLowerCase();
     const matchSearch =
       (u.name ?? "").toLowerCase().includes(searchLower) ||
       (u.email ?? "").toLowerCase().includes(searchLower);
+
+    if (filterRole === "PENDING_APPROVAL") {
+      return matchSearch && u.role === "SUPPORT_AGENT" && u.isApproved === false;
+    }
     const matchRole = filterRole === "ALL" || u.role === filterRole;
     return matchSearch && matchRole;
   });
@@ -349,6 +387,39 @@ export default function UserManagement() {
             Invite / Register Member
           </button>
         </div>
+
+        {/* Pending Approvals Callout Banner */}
+        {pendingAgents.length > 0 && (
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm animate-fade-up">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center text-amber-700 shrink-0">
+                <Clock className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="text-sm font-bold text-amber-900">
+                  {pendingAgents.length} Support Agent{pendingAgents.length > 1 ? "s" : ""} Awaiting Approval
+                </h4>
+                <p className="text-xs text-amber-700 mt-0.5">
+                  Pending agents cannot access tickets or queues until approved by an administrator.
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setFilterRole("PENDING_APPROVAL")}
+              className="px-3.5 py-1.5 rounded-lg text-xs font-bold text-amber-900 bg-amber-200/80 hover:bg-amber-200 transition-colors shrink-0 self-start sm:self-auto shadow-sm"
+            >
+              Review Pending Approvals ({pendingAgents.length})
+            </button>
+          </div>
+        )}
+
+        {successMsg && (
+          <div className="flex items-center gap-2 text-xs font-medium text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-lg px-3.5 py-2.5 animate-fade-up">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+            {successMsg}
+          </div>
+        )}
 
         {error && (
           <div className="text-xs text-red-700 bg-red-50 border border-red-200 rounded-lg px-3.5 py-2.5 animate-fade-up">
@@ -396,7 +467,36 @@ export default function UserManagement() {
                 />
               </div>
               <div className="flex flex-wrap gap-1.5">
-                {(["ALL", "ADMIN", "SUPPORT_AGENT", "CUSTOMER"] as const).map((r) => (
+                <button
+                  type="button"
+                  onClick={() => setFilterRole("ALL")}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                    filterRole === "ALL"
+                      ? "bg-indigo-600 text-white shadow-sm"
+                      : "text-slate-600 bg-white border border-slate-200 hover:bg-slate-100"
+                  }`}
+                >
+                  All Users
+                </button>
+                {pendingAgents.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setFilterRole("PENDING_APPROVAL")}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                      filterRole === "PENDING_APPROVAL"
+                        ? "bg-amber-600 text-white shadow-sm"
+                        : "text-amber-800 bg-amber-50 border border-amber-200 hover:bg-amber-100"
+                    }`}
+                  >
+                    <span>Pending Approvals</span>
+                    <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+                      filterRole === "PENDING_APPROVAL" ? "bg-white text-amber-800" : "bg-amber-200 text-amber-900"
+                    }`}>
+                      {pendingAgents.length}
+                    </span>
+                  </button>
+                )}
+                {(["SUPPORT_AGENT", "ADMIN", "CUSTOMER"] as const).map((r) => (
                   <button
                     key={r}
                     type="button"
@@ -407,7 +507,7 @@ export default function UserManagement() {
                         : "text-slate-600 bg-white border border-slate-200 hover:bg-slate-100"
                     }`}
                   >
-                    {r === "ALL" ? "All Users" : r === "SUPPORT_AGENT" ? "Agents" : r === "ADMIN" ? "Admins" : "Customers"}
+                    {r === "SUPPORT_AGENT" ? "Agents" : r === "ADMIN" ? "Admins" : "Customers"}
                   </button>
                 ))}
               </div>
@@ -419,7 +519,7 @@ export default function UserManagement() {
                 <table className="w-full text-left min-w-[500px]">
                   <thead>
                     <tr className="border-b border-slate-200 bg-slate-50">
-                      {["Member Details", "Assigned Role", "Actions"].map((h) => (
+                      {["Member Details", "Assigned Role", "Approval Status", "Actions"].map((h) => (
                         <th key={h} className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
                           {h}
                         </th>
@@ -430,6 +530,8 @@ export default function UserManagement() {
                     {filtered.map((u, i) => {
                       const cfg = ROLE_CONFIG[u.role] || ROLE_CONFIG.CUSTOMER;
                       const Icon = cfg.icon;
+                      const isPendingAgent = u.role === "SUPPORT_AGENT" && u.isApproved === false;
+
                       return (
                         <tr
                           key={u.id}
@@ -468,35 +570,80 @@ export default function UserManagement() {
                             </span>
                           </td>
                           <td className="px-4 py-3">
-                            <div className="relative">
-                              <button
-                                type="button"
-                                onClick={() => setOpenMenu(openMenu === u.id ? null : u.id)}
-                                className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-all"
-                              >
-                                <MoreHorizontal className="w-4 h-4" />
-                              </button>
-                              {openMenu === u.id && (
-                                <>
-                                  <div
-                                    className="fixed inset-0 z-10"
-                                    onClick={() => setOpenMenu(null)}
-                                  />
-                                  <div className="absolute right-0 top-9 z-20 w-44 bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden animate-fade-up">
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        setViewUser(u);
-                                        setOpenMenu(null);
-                                      }}
-                                      className="w-full flex items-center gap-2 px-3 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
-                                    >
-                                      <Eye className="w-3.5 h-3.5 text-indigo-600" />
-                                      View Profile
-                                    </button>
-                                  </div>
-                                </>
+                            {u.role === "SUPPORT_AGENT" ? (
+                              isPendingAgent ? (
+                                <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 border border-amber-200">
+                                  <Clock className="w-3 h-3 text-amber-600" />
+                                  Pending Approval
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                  <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                                  Approved
+                                </span>
+                              )
+                            ) : (
+                              <span className="inline-flex items-center gap-1 text-[10px] font-medium text-slate-500">
+                                Active
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-2">
+                              {isPendingAgent && (
+                                <button
+                                  type="button"
+                                  disabled={approvingId === u.id}
+                                  onClick={() => handleApprove(u)}
+                                  className="inline-flex items-center gap-1 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 px-2.5 py-1 rounded-lg transition-all shadow-sm shadow-emerald-600/20"
+                                >
+                                  <Check className="w-3.5 h-3.5" />
+                                  {approvingId === u.id ? "Approving…" : "Approve"}
+                                </button>
                               )}
+                              <div className="relative">
+                                <button
+                                  type="button"
+                                  onClick={() => setOpenMenu(openMenu === u.id ? null : u.id)}
+                                  className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-all"
+                                >
+                                  <MoreHorizontal className="w-4 h-4" />
+                                </button>
+                                {openMenu === u.id && (
+                                  <>
+                                    <div
+                                      className="fixed inset-0 z-10"
+                                      onClick={() => setOpenMenu(null)}
+                                    />
+                                    <div className="absolute right-0 top-9 z-20 w-44 bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden animate-fade-up">
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setViewUser(u);
+                                          setOpenMenu(null);
+                                        }}
+                                        className="w-full flex items-center gap-2 px-3 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+                                      >
+                                        <Eye className="w-3.5 h-3.5 text-indigo-600" />
+                                        View Profile
+                                      </button>
+                                      {isPendingAgent && (
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            setOpenMenu(null);
+                                            handleApprove(u);
+                                          }}
+                                          className="w-full flex items-center gap-2 px-3 py-2.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-50 transition-colors border-t border-slate-100"
+                                        >
+                                          <UserCheck className="w-3.5 h-3.5 text-emerald-600" />
+                                          Approve Agent
+                                        </button>
+                                      )}
+                                    </div>
+                                  </>
+                                )}
+                              </div>
                             </div>
                           </td>
                         </tr>

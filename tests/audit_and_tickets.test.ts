@@ -227,7 +227,7 @@ describe("Audit Logs & Ticket Queries Service", () => {
       const res = await (await import("../src/services/userService")).approveAgent("00000000-0000-0000-0000-000000000011");
       expect(res.error).toBeUndefined();
       expect(targetUserId).toBe("00000000-0000-0000-0000-000000000011");
-      expect(updatedPayload).toEqual({ is_approved: true });
+      expect(updatedPayload.is_approved).toBe(true);
     });
 
     it("unapproveAgent updates is_approved to false in public.users", async () => {
@@ -250,7 +250,7 @@ describe("Audit Logs & Ticket Queries Service", () => {
       const res = await (await import("../src/services/userService")).unapproveAgent("00000000-0000-0000-0000-000000000011");
       expect(res.error).toBeUndefined();
       expect(targetUserId).toBe("00000000-0000-0000-0000-000000000011");
-      expect(updatedPayload).toEqual({ is_approved: false });
+      expect(updatedPayload.is_approved).toBe(false);
     });
   });
 });

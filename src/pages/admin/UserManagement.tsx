@@ -351,12 +351,14 @@ function UserProfileModal({ user, onClose, onApprove, onDeny, onUnapprove }: Pro
 // ---------------------------------------------------------------------------
 // Main UserManagement component
 // ---------------------------------------------------------------------------
+type FilterTab = "ALL" | "APPROVED_AGENTS" | "UNAPPROVED_AGENTS" | "CUSTOMER" | "ADMIN";
+
 export default function UserManagement() {
   const { user: currentAdmin } = useAuth();
   const [users, setUsers] = useState<UserType[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [filterRole, setFilterRole] = useState<Role | "ALL" | "PENDING_APPROVAL">("ALL");
+  const [activeTab, setActiveTab] = useState<FilterTab>("ALL");
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
@@ -390,7 +392,7 @@ export default function UserManagement() {
       const res = await approveAgent(targetUser.id);
       if (res.error) throw new Error(res.error);
 
-      setSuccessMsg(`Support Agent "${targetUser.name}" has been approved in the database! They now have full access to sign in.`);
+      setSuccessMsg(`Support Agent "${targetUser.name}" has been approved in the database! They now have full access to tickets and queues.`);
       loadUsers();
       setTimeout(() => setSuccessMsg(""), 6000);
     } catch (err) {
@@ -426,7 +428,7 @@ export default function UserManagement() {
       const res = await unapproveAgent(targetUser.id);
       if (res.error) throw new Error(res.error);
 
-      setSuccessMsg(`Support Agent "${targetUser.name}" approval has been revoked in the database. Their account is now unapproved.`);
+      setSuccessMsg(`Support Agent "${targetUser.name}" approval has been revoked. Their account is now unapproved.`);
       loadUsers();
       setTimeout(() => setSuccessMsg(""), 6000);
     } catch (err) {
@@ -436,7 +438,14 @@ export default function UserManagement() {
     }
   };
 
-  const pendingAgents = users.filter((u) => u.role === "SUPPORT_AGENT" && u.isApproved === false);
+  const approvedAgents = users.filter(
+    (u) => (u.role === "SUPPORT_AGENT" || (u.role as string)?.toUpperCase() === "SUPPORT_AGENT") && u.isApproved === true
+  );
+  const unapprovedAgents = users.filter(
+    (u) => (u.role === "SUPPORT_AGENT" || (u.role as string)?.toUpperCase() === "SUPPORT_AGENT") && u.isApproved === false
+  );
+  const customers = users.filter((u) => u.role === "CUSTOMER" || (u.role as string)?.toUpperCase() === "CUSTOMER");
+  const admins = users.filter((u) => u.role === "ADMIN" || (u.role as string)?.toUpperCase() === "ADMIN");
 
   const filtered = users.filter((u) => {
     const searchLower = search.toLowerCase();
@@ -444,11 +453,25 @@ export default function UserManagement() {
       (u.name ?? "").toLowerCase().includes(searchLower) ||
       (u.email ?? "").toLowerCase().includes(searchLower);
 
-    if (filterRole === "PENDING_APPROVAL") {
-      return matchSearch && u.role === "SUPPORT_AGENT" && u.isApproved === false;
+    if (!matchSearch) return false;
+
+    const isAgent = u.role === "SUPPORT_AGENT" || (u.role as string)?.toUpperCase() === "SUPPORT_AGENT";
+    const isCustomer = u.role === "CUSTOMER" || (u.role as string)?.toUpperCase() === "CUSTOMER";
+    const isAdmin = u.role === "ADMIN" || (u.role as string)?.toUpperCase() === "ADMIN";
+
+    if (activeTab === "APPROVED_AGENTS") {
+      return isAgent && u.isApproved === true;
     }
-    const matchRole = filterRole === "ALL" || u.role === filterRole;
-    return matchSearch && matchRole;
+    if (activeTab === "UNAPPROVED_AGENTS") {
+      return isAgent && u.isApproved === false;
+    }
+    if (activeTab === "CUSTOMER") {
+      return isCustomer;
+    }
+    if (activeTab === "ADMIN") {
+      return isAdmin;
+    }
+    return true; // ALL
   });
 
   return (
@@ -491,8 +514,8 @@ export default function UserManagement() {
           </button>
         </div>
 
-        {/* Pending Approvals Callout Banner */}
-        {pendingAgents.length > 0 && (
+        {/* Unapproved Agents Pending Banner */}
+        {unapprovedAgents.length > 0 && activeTab !== "UNAPPROVED_AGENTS" && (
           <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm animate-fade-up">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center text-amber-700 shrink-0">
@@ -500,19 +523,19 @@ export default function UserManagement() {
               </div>
               <div>
                 <h4 className="text-sm font-bold text-amber-900">
-                  {pendingAgents.length} Support Agent{pendingAgents.length > 1 ? "s" : ""} Awaiting Approval
+                  {unapprovedAgents.length} Unapproved Support Agent{unapprovedAgents.length > 1 ? "s" : ""}
                 </h4>
                 <p className="text-xs text-amber-700 mt-0.5">
-                  Pending agents cannot access tickets or queues until approved by an administrator.
+                  Unapproved agents cannot access tickets or queues until approved by an administrator.
                 </p>
               </div>
             </div>
             <button
               type="button"
-              onClick={() => setFilterRole("PENDING_APPROVAL")}
+              onClick={() => setActiveTab("UNAPPROVED_AGENTS")}
               className="px-3.5 py-1.5 rounded-lg text-xs font-bold text-amber-900 bg-amber-200/80 hover:bg-amber-200 transition-colors shrink-0 self-start sm:self-auto shadow-sm"
             >
-              Review Pending Approvals ({pendingAgents.length})
+              View Unapproved Agents ({unapprovedAgents.length})
             </button>
           </div>
         )}
@@ -541,24 +564,61 @@ export default function UserManagement() {
         {!loading && (
           <>
             {/* Role Summary Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 animate-fade-up" style={{ animationDelay: "40ms" }}>
-              {(["ADMIN", "SUPPORT_AGENT", "CUSTOMER"] as Role[]).map((r) => {
-                const cfg = ROLE_CONFIG[r];
-                const count = users.filter((u) => u.role === r).length;
-                const Icon = cfg.icon;
-                return (
-                  <div key={r} className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Icon className={`w-4 h-4 ${cfg.color}`} />
-                      <span className="text-xs font-bold text-slate-700">{cfg.label}s</span>
-                    </div>
-                    <div className="text-2xl font-extrabold text-slate-900">{count}</div>
-                  </div>
-                );
-              })}
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 animate-fade-up" style={{ animationDelay: "40ms" }}>
+              <div
+                onClick={() => setActiveTab("ALL")}
+                className={`bg-white border rounded-xl p-4 shadow-sm cursor-pointer transition-all ${
+                  activeTab === "ALL" ? "border-indigo-500 ring-2 ring-indigo-500/20" : "border-slate-200 hover:border-slate-300"
+                }`}
+              >
+                <div className="flex items-center gap-2 mb-1.5 text-slate-600 text-xs font-bold">
+                  <User className="w-4 h-4 text-slate-600" />
+                  <span>All Users</span>
+                </div>
+                <div className="text-2xl font-extrabold text-slate-900">{users.length}</div>
+              </div>
+
+              <div
+                onClick={() => setActiveTab("APPROVED_AGENTS")}
+                className={`bg-white border rounded-xl p-4 shadow-sm cursor-pointer transition-all ${
+                  activeTab === "APPROVED_AGENTS" ? "border-emerald-500 ring-2 ring-emerald-500/20" : "border-slate-200 hover:border-slate-300"
+                }`}
+              >
+                <div className="flex items-center gap-2 mb-1.5 text-emerald-700 text-xs font-bold">
+                  <Headphones className="w-4 h-4 text-emerald-600" />
+                  <span>Approved Agents</span>
+                </div>
+                <div className="text-2xl font-extrabold text-emerald-700">{approvedAgents.length}</div>
+              </div>
+
+              <div
+                onClick={() => setActiveTab("UNAPPROVED_AGENTS")}
+                className={`bg-white border rounded-xl p-4 shadow-sm cursor-pointer transition-all ${
+                  activeTab === "UNAPPROVED_AGENTS" ? "border-amber-500 ring-2 ring-amber-500/20" : "border-slate-200 hover:border-slate-300"
+                }`}
+              >
+                <div className="flex items-center gap-2 mb-1.5 text-amber-700 text-xs font-bold">
+                  <Clock className="w-4 h-4 text-amber-600" />
+                  <span>Unapproved Agents</span>
+                </div>
+                <div className="text-2xl font-extrabold text-amber-700">{unapprovedAgents.length}</div>
+              </div>
+
+              <div
+                onClick={() => setActiveTab("CUSTOMER")}
+                className={`bg-white border rounded-xl p-4 shadow-sm cursor-pointer transition-all ${
+                  activeTab === "CUSTOMER" ? "border-blue-500 ring-2 ring-blue-500/20" : "border-slate-200 hover:border-slate-300"
+                }`}
+              >
+                <div className="flex items-center gap-2 mb-1.5 text-blue-700 text-xs font-bold">
+                  <User className="w-4 h-4 text-blue-600" />
+                  <span>Customers</span>
+                </div>
+                <div className="text-2xl font-extrabold text-blue-700">{customers.length}</div>
+              </div>
             </div>
 
-            {/* Filters and Search */}
+            {/* Filters and Navigation Tabs */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 animate-fade-up" style={{ animationDelay: "80ms" }}>
               <div className="relative flex-1 max-w-full sm:max-w-xs">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -569,57 +629,87 @@ export default function UserManagement() {
                   className="w-full bg-white border border-slate-300 rounded-lg pl-9 pr-3.5 py-2 text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all shadow-sm"
                 />
               </div>
-              <div className="flex flex-wrap gap-1.5">
+
+              {/* Distinct Tabs */}
+              <div className="flex flex-wrap gap-1.5 bg-slate-100/80 p-1 rounded-xl border border-slate-200/80">
                 <button
                   type="button"
-                  onClick={() => setFilterRole("ALL")}
+                  onClick={() => setActiveTab("ALL")}
                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                    filterRole === "ALL"
-                      ? "bg-indigo-600 text-white shadow-sm"
-                      : "text-slate-600 bg-white border border-slate-200 hover:bg-slate-100"
+                    activeTab === "ALL"
+                      ? "bg-white text-slate-900 shadow-sm border border-slate-200 font-bold"
+                      : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
                   }`}
                 >
-                  All Users
+                  All Users ({users.length})
                 </button>
-                {pendingAgents.length > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => setFilterRole("PENDING_APPROVAL")}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
-                      filterRole === "PENDING_APPROVAL"
-                        ? "bg-amber-600 text-white shadow-sm"
-                        : "text-amber-800 bg-amber-50 border border-amber-200 hover:bg-amber-100"
-                    }`}
-                  >
-                    <span>Pending Approvals</span>
-                    <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
-                      filterRole === "PENDING_APPROVAL" ? "bg-white text-amber-800" : "bg-amber-200 text-amber-900"
-                    }`}>
-                      {pendingAgents.length}
-                    </span>
-                  </button>
-                )}
-                {(["SUPPORT_AGENT", "ADMIN", "CUSTOMER"] as const).map((r) => (
-                  <button
-                    key={r}
-                    type="button"
-                    onClick={() => setFilterRole(r)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                      filterRole === r
-                        ? "bg-indigo-600 text-white shadow-sm"
-                        : "text-slate-600 bg-white border border-slate-200 hover:bg-slate-100"
-                    }`}
-                  >
-                    {r === "SUPPORT_AGENT" ? "Agents" : r === "ADMIN" ? "Admins" : "Customers"}
-                  </button>
-                ))}
+
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("APPROVED_AGENTS")}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                    activeTab === "APPROVED_AGENTS"
+                      ? "bg-emerald-600 text-white shadow-sm font-bold"
+                      : "text-emerald-800 hover:bg-emerald-50"
+                  }`}
+                >
+                  <Headphones className="w-3.5 h-3.5" />
+                  <span>Approved Agents</span>
+                  <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+                    activeTab === "APPROVED_AGENTS" ? "bg-white text-emerald-800" : "bg-emerald-100 text-emerald-900"
+                  }`}>
+                    {approvedAgents.length}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("UNAPPROVED_AGENTS")}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                    activeTab === "UNAPPROVED_AGENTS"
+                      ? "bg-amber-600 text-white shadow-sm font-bold"
+                      : "text-amber-800 hover:bg-amber-50"
+                  }`}
+                >
+                  <Clock className="w-3.5 h-3.5" />
+                  <span>Unapproved Agents</span>
+                  <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+                    activeTab === "UNAPPROVED_AGENTS" ? "bg-white text-amber-800" : "bg-amber-100 text-amber-900"
+                  }`}>
+                    {unapprovedAgents.length}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("CUSTOMER")}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                    activeTab === "CUSTOMER"
+                      ? "bg-white text-blue-700 shadow-sm border border-slate-200 font-bold"
+                      : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
+                  }`}
+                >
+                  Customers ({customers.length})
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("ADMIN")}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                    activeTab === "ADMIN"
+                      ? "bg-white text-purple-700 shadow-sm border border-slate-200 font-bold"
+                      : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
+                  }`}
+                >
+                  Admins ({admins.length})
+                </button>
               </div>
             </div>
 
-            {/* Users Table */}
+            {/* Users / Agents Table */}
             <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm animate-fade-up" style={{ animationDelay: "120ms" }}>
               <div className="overflow-x-auto min-w-0">
-                <table className="w-full text-left min-w-[500px]">
+                <table className="w-full text-left min-w-[550px]">
                   <thead>
                     <tr className="border-b border-slate-200 bg-slate-50">
                       {["Member Details", "Assigned Role", "Approval Status", "Actions"].map((h) => (
@@ -633,12 +723,17 @@ export default function UserManagement() {
                     {filtered.map((u, i) => {
                       const cfg = ROLE_CONFIG[u.role] || ROLE_CONFIG.CUSTOMER;
                       const Icon = cfg.icon;
-                      const isPendingAgent = u.role === "SUPPORT_AGENT" && u.isApproved === false;
+                      const isAgent = u.role === "SUPPORT_AGENT" || (u.role as string)?.toUpperCase() === "SUPPORT_AGENT";
+                      const isUnapproved = isAgent && u.isApproved === false;
+                      const isDenied = isAgent && u.approvalStatus === "DENIED";
+                      const isApproved = isAgent && u.isApproved === true;
 
                       return (
                         <tr
                           key={u.id}
-                          className="hover:bg-slate-50 transition-colors animate-fade-up"
+                          className={`hover:bg-slate-50 transition-colors animate-fade-up ${
+                            isUnapproved ? "bg-amber-50/20" : ""
+                          }`}
                           style={{ animationDelay: `${i * 20}ms` }}
                         >
                           <td className="px-4 py-3">
@@ -647,7 +742,7 @@ export default function UserManagement() {
                                 className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold text-white shrink-0 ${
                                   u.role === "ADMIN"
                                     ? "bg-purple-600"
-                                    : u.role === "SUPPORT_AGENT"
+                                    : isAgent
                                     ? "bg-emerald-600"
                                     : "bg-blue-600"
                                 }`}
@@ -673,19 +768,19 @@ export default function UserManagement() {
                             </span>
                           </td>
                           <td className="px-4 py-3">
-                            {u.role === "SUPPORT_AGENT" ? (
-                              u.approvalStatus === "DENIED" ? (
-                                <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-red-50 text-red-700 border border-red-200">
+                            {isAgent ? (
+                              isDenied ? (
+                                <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-md bg-red-50 text-red-700 border border-red-200">
                                   <UserX className="w-3 h-3 text-red-600" />
                                   Registration Denied
                                 </span>
-                              ) : isPendingAgent ? (
-                                <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 border border-amber-200">
+                              ) : isUnapproved ? (
+                                <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-md bg-amber-50 text-amber-700 border border-amber-200">
                                   <Clock className="w-3 h-3 text-amber-600" />
                                   Pending Approval
                                 </span>
                               ) : (
-                                <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200">
                                   <CheckCircle2 className="w-3 h-3 text-emerald-600" />
                                   Approved
                                 </span>
@@ -698,34 +793,51 @@ export default function UserManagement() {
                           </td>
                           <td className="px-4 py-3">
                             <div className="flex items-center gap-2">
-                              {u.role === "SUPPORT_AGENT" && (
+                              {/* Prominent Action Buttons for Unapproved Agents */}
+                              {isAgent && (
                                 <>
-                                  {(isPendingAgent || u.approvalStatus === "DENIED") && (
-                                    <button
-                                      type="button"
-                                      disabled={approvingId === u.id}
-                                      onClick={() => handleApprove(u)}
-                                      className="inline-flex items-center gap-1 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 px-2.5 py-1 rounded-lg transition-all shadow-sm shadow-emerald-600/20"
-                                      title="Approve Agent"
-                                    >
-                                      <Check className="w-3.5 h-3.5" />
-                                      {approvingId === u.id ? "…" : "Approve"}
-                                    </button>
+                                  {isUnapproved && (
+                                    <>
+                                      <button
+                                        type="button"
+                                        disabled={approvingId === u.id}
+                                        onClick={() => handleApprove(u)}
+                                        className="inline-flex items-center gap-1.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 active:scale-95 disabled:opacity-50 px-3 py-1.5 rounded-lg transition-all shadow-sm shadow-emerald-600/20"
+                                        title="Approve Support Agent"
+                                      >
+                                        <Check className="w-3.5 h-3.5" />
+                                        {approvingId === u.id ? "Approving…" : "Approve"}
+                                      </button>
+                                      {!isDenied && (
+                                        <button
+                                          type="button"
+                                          disabled={approvingId === u.id}
+                                          onClick={() => handleDeny(u)}
+                                          className="inline-flex items-center gap-1.5 text-xs font-bold text-red-700 bg-red-50 hover:bg-red-100 active:scale-95 border border-red-200 disabled:opacity-50 px-3 py-1.5 rounded-lg transition-all shadow-sm"
+                                          title="Deny Support Agent Registration"
+                                        >
+                                          <X className="w-3.5 h-3.5 text-red-600" />
+                                          {approvingId === u.id ? "Denying…" : "Deny"}
+                                        </button>
+                                      )}
+                                    </>
                                   )}
-                                  {(isPendingAgent || (u.isApproved !== false && u.approvalStatus !== "DENIED")) && (
+
+                                  {isApproved && (
                                     <button
                                       type="button"
                                       disabled={approvingId === u.id}
-                                      onClick={() => handleDeny(u)}
-                                      className="inline-flex items-center gap-1 text-xs font-bold text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 disabled:opacity-50 px-2.5 py-1 rounded-lg transition-all shadow-sm"
-                                      title="Deny Agent Registration"
+                                      onClick={() => handleUnapprove(u)}
+                                      className="inline-flex items-center gap-1 text-xs font-medium text-slate-600 hover:text-amber-800 bg-slate-50 hover:bg-amber-50 border border-slate-200 hover:border-amber-200 disabled:opacity-50 px-2.5 py-1.5 rounded-lg transition-all"
+                                      title="Revoke Approval (Reset to Pending)"
                                     >
-                                      <X className="w-3.5 h-3.5 text-red-600" />
-                                      {approvingId === u.id ? "…" : "Deny"}
+                                      <Clock className="w-3.5 h-3.5 text-amber-600" />
+                                      Revoke
                                     </button>
                                   )}
                                 </>
                               )}
+
                               <div className="relative">
                                 <button
                                   type="button"
@@ -752,9 +864,9 @@ export default function UserManagement() {
                                         <Eye className="w-3.5 h-3.5 text-indigo-600" />
                                         View Profile
                                       </button>
-                                      {u.role === "SUPPORT_AGENT" && (
+                                      {isAgent && (
                                         <>
-                                          {u.isApproved !== true && (
+                                          {!isApproved && (
                                             <button
                                               type="button"
                                               onClick={() => {
@@ -767,7 +879,7 @@ export default function UserManagement() {
                                               Approve Agent
                                             </button>
                                           )}
-                                          {u.approvalStatus !== "DENIED" && (
+                                          {!isDenied && (
                                             <button
                                               type="button"
                                               onClick={() => {
@@ -796,7 +908,13 @@ export default function UserManagement() {
               </div>
               {filtered.length === 0 && (
                 <div className="py-12 text-center text-xs sm:text-sm text-slate-500">
-                  {users.length === 0 ? "No users found in database." : "No users match the active filter."}
+                  {activeTab === "UNAPPROVED_AGENTS"
+                    ? "No unapproved agents. All support agent registrations have been approved."
+                    : activeTab === "APPROVED_AGENTS"
+                    ? "No approved agents found."
+                    : users.length === 0
+                    ? "No users found in database."
+                    : "No users match the active filter or search."}
                 </div>
               )}
             </div>

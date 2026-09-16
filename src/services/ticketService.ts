@@ -1,17 +1,17 @@
 import { supabase } from "../lib/supabase";
 
-import type { AuditLog } from '../types'; 
+import type { AuditLog } from '../types';
 import { cacheUsers, mapComment, mapAuditLog, mapTicket } from "../lib/mappers";
 import { computeSLADeadlines, isSLABreached } from "../lib/sla";
 import { validateTransition } from "../lib/stateMachine";
-import { MOCK_TICKETS, MOCK_MESSAGES, MOCK_AUDIT_LOGS } from "../data/mockData";
+import { MOCK_TICKETS, MOCK_MESSAGES } from "../data/mockData";
 import type { Message, Priority, Ticket, TicketStatus, User } from "../types";
 
 async function loadUserDirectory() {
   try {
     const { data } = await supabase.from("users").select("*");
     if (data) cacheUsers(data);
-  } catch (_) {}
+  } catch (_) { }
 }
 
 function isValidUUID(str?: string | null): boolean {
@@ -19,6 +19,7 @@ function isValidUUID(str?: string | null): boolean {
 }
 
 export async function getTickets(userId?: string, userRole?: string): Promise<Ticket[]> {
+  const normalizedRole = userRole?.toUpperCase();
   try {
     await loadUserDirectory();
 
@@ -33,16 +34,19 @@ export async function getTickets(userId?: string, userRole?: string): Promise<Ti
       .is("deleted_at", null)
       .order("created_at", { ascending: false });
 
-    const normalizedRole = userRole?.toLowerCase();
-    if (userRole === "customer" || normalizedRole === "customer") {
-      query = query.eq("customer_id", userId);
-    } else if (userRole === "support_agent" || normalizedRole === "support_agent") {
+    if (normalizedRole === "CUSTOMER") {
+      if (userId) query = query.eq("customer_id", userId);
+    } else if (normalizedRole === "SUPPORT_AGENT") {
       if (userId) {
         query = query.or(`assigned_agent_id.eq.${userId},assigned_agent_id.is.null`);
       }
     }
+    // ADMIN role selects all non-deleted tickets without restriction
 
-    let { data, error } = await query;
+    const queryRes = await query;
+    let data: any = queryRes.data;
+    const error = queryRes.error;
+
     if (error) {
       // Fallback to select("*") if foreign key relationship query fails in mock or test environments
       const fallbackQuery = supabase
@@ -52,9 +56,9 @@ export async function getTickets(userId?: string, userRole?: string): Promise<Ti
         .is("deleted_at", null)
         .order("created_at", { ascending: false });
 
-      if (userRole === "customer" || normalizedRole === "customer") {
-        (fallbackQuery as any).eq("customer_id", userId);
-      } else if (userRole === "support_agent" || normalizedRole === "support_agent") {
+      if (normalizedRole === "CUSTOMER") {
+        if (userId) (fallbackQuery as any).eq("customer_id", userId);
+      } else if (normalizedRole === "SUPPORT_AGENT") {
         if (userId) {
           (fallbackQuery as any).or(`assigned_agent_id.eq.${userId},assigned_agent_id.is.null`);
         }
@@ -68,13 +72,12 @@ export async function getTickets(userId?: string, userRole?: string): Promise<Ti
     }
     // If DB is empty, return initial mock tickets for testing/preview
     if (data && data.length === 0) {
-      const normalizedRole = userRole?.toLowerCase();
-      if (userRole === "customer" || normalizedRole === "customer") {
+      if (normalizedRole === "CUSTOMER") {
         return MOCK_TICKETS.filter(
           (t) => !(t as any).isDeleted && !(t as any).is_deleted && t.customerId === userId,
         );
       }
-      if (userRole === "support_agent" || normalizedRole === "support_agent") {
+      if (normalizedRole === "SUPPORT_AGENT") {
         return MOCK_TICKETS.filter(
           (t) =>
             !(t as any).isDeleted &&
@@ -87,13 +90,12 @@ export async function getTickets(userId?: string, userRole?: string): Promise<Ti
     return [];
   } catch (_) {
     // Graceful fallback to mock data when network / database is offline
-    const normalizedRole = userRole?.toLowerCase();
-    if (userRole === "customer" || normalizedRole === "customer") {
+    if (normalizedRole === "CUSTOMER") {
       return MOCK_TICKETS.filter(
         (t) => !(t as any).isDeleted && !(t as any).is_deleted && t.customerId === userId,
       );
     }
-    if (userRole === "support_agent" || normalizedRole === "support_agent") {
+    if (normalizedRole === "SUPPORT_AGENT") {
       return MOCK_TICKETS.filter(
         (t) =>
           !(t as any).isDeleted &&
@@ -430,7 +432,7 @@ export async function softDeleteTicket(
 
     const { error } = await supabase
       .from("tickets")
-      .update(payload)
+      .update(payload as any)
       .eq("id", id);
 
     if (error) {
@@ -495,5 +497,5 @@ export async function refreshSLABreaches(tickets: Ticket[]) {
         supabase.from("tickets").update({ sla_breach: true }).eq("id", t.id),
       ),
     );
-  } catch (_) {}
+  } catch (_) { }
 }

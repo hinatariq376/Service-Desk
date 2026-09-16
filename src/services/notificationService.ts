@@ -54,7 +54,7 @@ export async function markNotificationRead(notificationId: string): Promise<void
 
 export async function markAllNotificationsRead(): Promise<void> {
   try {
-    await supabase.rpc("mark_all_notifications_read");
+    await (supabase.rpc as any)("mark_all_notifications_read");
   } catch (_) {}
 }
 

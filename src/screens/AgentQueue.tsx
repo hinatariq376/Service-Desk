@@ -13,8 +13,8 @@ type QueueView = "assigned" | "active" | "breach";
 
 const PAGE_TITLES: Record<QueueView, string> = {
   assigned: "Assigned to Me",
-  active: "Active Work Queue",
-  breach: "SLA Breached Queue",
+  active: "Active Work",
+  breach: "SLA Breached",
 };
 
 const PRIORITY_ORDER: Record<string, number> = { CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3 };
@@ -170,24 +170,44 @@ export default function AgentQueue() {
     );
   }
 
-  const assignedToMe = tickets.filter((t) => t.assignedAgentId === user.id);
-  // Active Work: my assigned active tickets + unassigned tickets any agent can pick up
-  const activeAssigned = assignedToMe.filter((t) => !["RESOLVED", "CLOSED"].includes(t.status));
-  const unassignedOpen = tickets.filter(
-    (t) => !t.assignedAgentId && !["RESOLVED", "CLOSED"].includes(t.status),
+  // 1. "Assigned to Me": Fetch all non-closed tickets where assigned_agent_id === currentUser.id
+  const assignedToMe = sortByPriority(
+    tickets.filter((t) => t.assignedAgentId === user.id && t.status !== "CLOSED")
   );
-  const activeWork = sortByPriority([...activeAssigned, ...unassignedOpen]);
-  const slaBreached = assignedToMe.filter((t) => t.slaBreach || new Date(t.slaDeadline) < new Date());
+
+  // 2. "Active Work": Fetch tickets assigned to the current user where status is explicitly 'IN_PROGRESS' or 'PENDING_CUSTOMER' (WAITING_FOR_CUSTOMER)
+  const activeWork = sortByPriority(
+    tickets.filter(
+      (t) =>
+        t.assignedAgentId === user.id &&
+        (t.status === "IN_PROGRESS" ||
+          (t.status as string) === "PENDING_CUSTOMER" ||
+          t.status === "WAITING_FOR_CUSTOMER")
+    )
+  );
+
+  // 3. "SLA Breached": Fetch tickets assigned to the current user where sla_status === 'BREACHED' and status !== 'CLOSED'
+  const slaBreached = sortByPriority(
+    tickets.filter(
+      (t) =>
+        t.assignedAgentId === user.id &&
+        (t.slaBreach ||
+          (t as any).sla_status === "BREACHED" ||
+          (t as any).slaStatus === "BREACHED" ||
+          new Date(t.slaDeadline) < new Date()) &&
+        t.status !== "CLOSED"
+    )
+  );
 
   const VIEW_TICKETS: Record<QueueView, Ticket[]> = {
-    assigned: sortByPriority(assignedToMe),
+    assigned: assignedToMe,
     active: activeWork,
-    breach: sortByPriority(slaBreached),
+    breach: slaBreached,
   };
 
   const EMPTY_MSGS: Record<QueueView, string> = {
-    assigned: "No tickets are assigned to you yet. Check Active Work to pick up open tickets.",
-    active: "No active tickets in the work queue.",
+    assigned: "No active tickets are currently assigned to you.",
+    active: "No tickets currently in progress or waiting for customer response.",
     breach: "Zero SLA breaches across your assigned work.",
   };
 
@@ -200,6 +220,16 @@ export default function AgentQueue() {
     { icon: ClockIcon, label: "SLA Breached", pageId: "breach", badge: slaBreached.length },
   ];
 
+  const handleNavigate = (pageId: string) => {
+    const nextView = pageId as QueueView;
+    setQueueView(nextView);
+    const nextFilteredTickets = VIEW_TICKETS[nextView];
+    // When switching tabs, clear selected ticket if it does not belong to the active tab's filter
+    if (selectedId && !nextFilteredTickets.some((t) => t.id === selectedId)) {
+      setSelectedId(null);
+    }
+  };
+
   const handleLogout = async () => {
     await signOut();
     navigate("/login");
@@ -211,10 +241,7 @@ export default function AgentQueue() {
       portalLabel="Agent Workspace"
       navItems={navItems}
       activePage={queueView}
-      onNavigate={(id) => {
-        setQueueView(id as QueueView);
-        setSelectedId(null);
-      }}
+      onNavigate={handleNavigate}
       onLogout={handleLogout}
       title={PAGE_TITLES[queueView]}
       loading={loading}

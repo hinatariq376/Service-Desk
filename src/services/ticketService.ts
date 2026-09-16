@@ -111,6 +111,62 @@ export async function fetchTicketsForUser(user: User): Promise<Ticket[]> {
   return getTickets(user.id, user.role);
 }
 
+export type AgentQueueFilter = "assigned" | "active" | "breach";
+
+export async function fetchAgentFilteredTickets(
+  agentId: string,
+  filter: AgentQueueFilter
+): Promise<Ticket[]> {
+  try {
+    await loadUserDirectory();
+    let query = supabase
+      .from("tickets")
+      .select(`
+        *,
+        customer:users!customer_id (id, name, email, role, avatar),
+        assigned_agent:users!assigned_agent_id (id, name, email, role, avatar)
+      `)
+      .or("is_deleted.is.null,is_deleted.eq.false")
+      .is("deleted_at", null)
+      .eq("assigned_agent_id", agentId);
+
+    if (filter === "assigned") {
+      query = query.neq("status", "CLOSED");
+    } else if (filter === "active") {
+      query = query.or("status.eq.IN_PROGRESS,status.eq.PENDING_CUSTOMER,status.eq.WAITING_FOR_CUSTOMER");
+    } else if (filter === "breach") {
+      query = query.neq("status", "CLOSED").or("sla_breach.eq.true,sla_status.eq.BREACHED");
+    }
+
+    const { data, error } = await query.order("created_at", { ascending: false });
+    if (!error && data && data.length > 0) {
+      return data.map(mapTicket);
+    }
+  } catch (_) {}
+
+  // Fallback / mock data filter
+  const all = await getTickets(agentId, "SUPPORT_AGENT");
+  if (filter === "assigned") {
+    return all.filter((t) => t.assignedAgentId === agentId && t.status !== "CLOSED");
+  } else if (filter === "active") {
+    return all.filter(
+      (t) =>
+        t.assignedAgentId === agentId &&
+        (t.status === "IN_PROGRESS" ||
+          (t.status as string) === "PENDING_CUSTOMER" ||
+          t.status === "WAITING_FOR_CUSTOMER")
+    );
+  } else if (filter === "breach") {
+    return all.filter(
+      (t) =>
+        t.assignedAgentId === agentId &&
+        (t.slaBreach || (t as any).sla_status === "BREACHED" || (t as any).slaStatus === "BREACHED" || new Date(t.slaDeadline) < new Date()) &&
+        t.status !== "CLOSED"
+    );
+  }
+  return all;
+}
+
 export async function fetchMessagesForTickets(ticketIds: string[]): Promise<Message[]> {
   if (ticketIds.length === 0) return [];
 

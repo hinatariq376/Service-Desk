@@ -253,5 +253,93 @@ describe("Audit Logs & Ticket Queries Service", () => {
       expect(updatedPayload.is_approved).toBe(false);
     });
   });
+
+  describe("Agent Workspace Sidebar Filtering Logic", () => {
+    it("filters Assigned to Me: non-closed tickets assigned to current agent", async () => {
+      const { fetchAgentFilteredTickets } = await import("../src/services/ticketService");
+      const agentId = "00000000-0000-0000-0000-000000000022";
+      
+      const mockRows = [
+        { id: "1", title: "Active ticket", status: "IN_PROGRESS", customer_id: "c1", assigned_agent_id: agentId, sla_breach: false },
+        { id: "2", title: "Closed ticket", status: "CLOSED", customer_id: "c2", assigned_agent_id: agentId, sla_breach: false },
+      ];
+
+      vi.spyOn(supabase, "from").mockImplementation(() => {
+        return {
+          select: () => ({
+            or: () => ({
+              is: () => ({
+                eq: () => ({
+                  neq: () => ({
+                    order: () => Promise.resolve({ data: [mockRows[0]], error: null }),
+                  }),
+                }),
+              }),
+            }),
+          }),
+        } as any;
+      });
+
+      const results = await fetchAgentFilteredTickets(agentId, "assigned");
+      expect(results.length).toBe(1);
+      expect(results[0].id).toBe("1");
+      expect(results[0].status).toBe("IN_PROGRESS");
+    });
+
+    it("filters Active Work: IN_PROGRESS or PENDING_CUSTOMER tickets assigned to agent", async () => {
+      const { fetchAgentFilteredTickets } = await import("../src/services/ticketService");
+      const agentId = "00000000-0000-0000-0000-000000000022";
+
+      const mockRows = [
+        { id: "1", title: "In Progress", status: "IN_PROGRESS", customer_id: "c1", assigned_agent_id: agentId, sla_breach: false },
+        { id: "2", title: "Waiting", status: "WAITING_FOR_CUSTOMER", customer_id: "c2", assigned_agent_id: agentId, sla_breach: false },
+        { id: "3", title: "Resolved", status: "RESOLVED", customer_id: "c3", assigned_agent_id: agentId, sla_breach: false },
+      ];
+
+      vi.spyOn(supabase, "from").mockImplementation(() => {
+        return {
+          select: () => ({
+            or: () => ({
+              is: () => ({
+                eq: () => ({
+                  or: () => ({
+                    order: () => Promise.resolve({ data: [mockRows[0], mockRows[1]], error: null }),
+                  }),
+                }),
+              }),
+            }),
+          }),
+        } as any;
+      });
+
+      const results = await fetchAgentFilteredTickets(agentId, "active");
+      expect(results.length).toBe(2);
+      expect(results.map(r => r.id)).toEqual(["1", "2"]);
+    });
+
+    it("filters SLA Breached: non-closed tickets with breached SLA", async () => {
+      const { fetchAgentFilteredTickets } = await import("../src/services/ticketService");
+      const agentId = "00000000-0000-0000-0000-000000000022";
+
+      const mockRows = [
+        { id: "1", title: "Breached Open", status: "OPEN", customer_id: "c1", assigned_agent_id: agentId, sla_breach: true },
+      ];
+
+      vi.spyOn(supabase, "from").mockImplementation(() => {
+        const queryChain: any = {};
+        queryChain.select = () => queryChain;
+        queryChain.or = () => queryChain;
+        queryChain.is = () => queryChain;
+        queryChain.eq = () => queryChain;
+        queryChain.neq = () => queryChain;
+        queryChain.order = () => Promise.resolve({ data: mockRows, error: null });
+        return queryChain;
+      });
+
+      const results = await fetchAgentFilteredTickets(agentId, "breach");
+      expect(results.length).toBe(1);
+      expect(results[0].slaBreach).toBe(true);
+    });
+  });
 });
 

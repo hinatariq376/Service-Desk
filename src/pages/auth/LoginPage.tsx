@@ -13,10 +13,20 @@ const ROLE_CONFIG = [
 ];
 
 export default function LoginPage() {
-  const { user, loading: authLoading, refreshProfile } = useAuth();
+  const { signIn, user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<Role>("CUSTOMER");
-  const [email, setEmail] = useState(DEMO_EMAILS.CUSTOMER);
+
+  const [activeTab, setActiveTab] = useState<Role>(() => {
+    const saved = sessionStorage.getItem("service_desk_active_tab") as Role;
+    return saved && ["CUSTOMER", "SUPPORT_AGENT", "ADMIN"].includes(saved) ? saved : "ADMIN";
+  });
+
+  const [email, setEmail] = useState(() => {
+    const saved = sessionStorage.getItem("service_desk_active_tab") as Role;
+    const initialRole = saved && ["CUSTOMER", "SUPPORT_AGENT", "ADMIN"].includes(saved) ? saved : "ADMIN";
+    return DEMO_EMAILS[initialRole] || DEMO_EMAILS.ADMIN;
+  });
+
   const [password, setPassword] = useState(DEMO_PASSWORD);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -24,67 +34,68 @@ export default function LoginPage() {
 
   const handleTabClick = (r: Role) => {
     setActiveTab(r);
+    sessionStorage.setItem("service_desk_active_tab", r);
     setEmail(DEMO_EMAILS[r]);
     setPassword(DEMO_PASSWORD);
     setError("");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    // 1. Prevent form default and avoid resetting activeTab or inputs
     e.preventDefault();
     setError("");
-    if (!email || !password) {
-      setError("Please enter your credentials.");
+    if (!email.trim() || !password) {
+      setError("Please enter your email and password.");
       return;
     }
     setLoading(true);
 
     try {
-      const { data, error: signInErr } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      // 1. Call signIn from AuthContext which sets session & loads profile synchronously
+      const result = await signIn(email.trim(), password);
 
-      if (signInErr || !data?.user) {
+      if (result.error) {
         setLoading(false);
-        setError(signInErr?.message || "Invalid email or password.");
+        setError(result.error);
         return;
       }
 
-      // Explicitly fetch user profile from public.users
-      const { data: userProfile } = await supabase
-        .from("users")
-        .select("role, is_approved")
-        .eq("id", data.user.id)
-        .single();
+      // 2. Resolve role from loaded profile or fallback
+      let targetRole = (result.user?.role || activeTab).toUpperCase();
 
-      const rawRole = (
-        userProfile?.role ||
-        data.user.user_metadata?.role ||
-        data.user.app_metadata?.role ||
-        activeTab ||
-        ""
-      ).toUpperCase();
+      // Additional verify from public.users if available
+      try {
+        const { data: authData } = await supabase.auth.getUser();
+        if (authData?.user) {
+          const { data: userProfile } = await supabase
+            .from("users")
+            .select("role")
+            .eq("id", authData.user.id)
+            .maybeSingle();
 
-      // Trigger AuthContext profile refresh in background
-      await refreshProfile().catch(() => {});
+          if (userProfile?.role) {
+            targetRole = userProfile.role.toUpperCase();
+          } else if (authData.user.user_metadata?.role) {
+            targetRole = authData.user.user_metadata.role.toUpperCase();
+          }
+        }
+      } catch (_) {}
 
       setLoading(false);
 
-      if (rawRole === "ADMIN") {
+      if (targetRole === "ADMIN") {
         navigate("/admin/dashboard", { replace: true });
-      } else if (rawRole === "SUPPORT_AGENT") {
+      } else if (targetRole === "SUPPORT_AGENT") {
         navigate("/agent/dashboard", { replace: true });
       } else {
         navigate("/customer/dashboard", { replace: true });
       }
     } catch (err) {
       setLoading(false);
-      setError(err instanceof Error ? err.message : "Failed to sign in.");
+      setError(err instanceof Error ? err.message : "Sign in failed. Please try again.");
     }
   };
 
-  // If already authenticated and session is verified, direct to correct portal
+  // If session is already active and verified, navigate immediately
   useEffect(() => {
     if (user && !authLoading) {
       const userRole = (user.role || "").toUpperCase();

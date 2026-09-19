@@ -131,9 +131,9 @@ export async function fetchAgentFilteredTickets(
       .eq("assigned_agent_id", agentId);
 
     if (filter === "assigned") {
-      query = query.neq("status", "CLOSED");
+      // Show ALL tickets (both OPEN and CLOSED) assigned to agent
     } else if (filter === "active") {
-      query = query.or("status.eq.IN_PROGRESS,status.eq.PENDING_CUSTOMER,status.eq.WAITING_FOR_CUSTOMER");
+      query = query.not("status", "in", '("CLOSED","RESOLVED")');
     } else if (filter === "breach") {
       query = query.neq("status", "CLOSED").or("sla_breach.eq.true,sla_status.eq.BREACHED");
     }
@@ -147,21 +147,17 @@ export async function fetchAgentFilteredTickets(
   // Fallback / mock data filter
   const all = await getTickets(agentId, "SUPPORT_AGENT");
   if (filter === "assigned") {
-    return all.filter((t) => t.assignedAgentId === agentId && t.status !== "CLOSED");
+    return all.filter((t) => t.assignedAgentId === agentId);
   } else if (filter === "active") {
     return all.filter(
-      (t) =>
-        t.assignedAgentId === agentId &&
-        (t.status === "IN_PROGRESS" ||
-          (t.status as string) === "PENDING_CUSTOMER" ||
-          t.status === "WAITING_FOR_CUSTOMER")
+      (t) => t.assignedAgentId === agentId && !["CLOSED", "RESOLVED"].includes(t.status)
     );
   } else if (filter === "breach") {
     return all.filter(
       (t) =>
         t.assignedAgentId === agentId &&
-        (t.slaBreach || (t as any).sla_status === "BREACHED" || (t as any).slaStatus === "BREACHED" || new Date(t.slaDeadline) < new Date()) &&
-        t.status !== "CLOSED"
+        t.status !== "CLOSED" &&
+        (t.slaBreach || (t as any).sla_status === "BREACHED" || (t as any).slaStatus === "BREACHED" || new Date(t.slaDeadline) < new Date())
     );
   }
   return all;

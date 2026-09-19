@@ -126,30 +126,8 @@ export async function denyAgent(userId: string): Promise<{ error?: string }> {
   }
 }
 
-export async function unapproveAgent(userId: string): Promise<{ error?: string }> {
-  try {
-    const { error } = await supabase
-      .from("users")
-      .update({ is_approved: false, approval_status: "PENDING" } as any)
-      .eq("id", userId);
-    if (error) {
-      await supabase.from("users").update({ is_approved: false }).eq("id", userId);
-    }
-    const mock = MOCK_USERS.find((u) => u.id === userId);
-    if (mock) {
-      mock.isApproved = false;
-      mock.approvalStatus = "PENDING";
-    }
-    return {};
-  } catch (err) {
-    const mock = MOCK_USERS.find((u) => u.id === userId);
-    if (mock) {
-      mock.isApproved = false;
-      mock.approvalStatus = "PENDING";
-      return {};
-    }
-    return { error: err instanceof Error ? err.message : "Failed to revoke agent approval." };
-  }
+export async function unapproveAgent(_userId: string): Promise<{ error?: string }> {
+  return { error: "Strict Permanent Approval Rule: Once approved, a Support Agent cannot be revoked or unapproved." };
 }
 
 export async function updateUserRole(_userId: string, _role: Role) {

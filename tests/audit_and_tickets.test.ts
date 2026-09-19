@@ -230,32 +230,16 @@ describe("Audit Logs & Ticket Queries Service", () => {
       expect(updatedPayload.is_approved).toBe(true);
     });
 
-    it("unapproveAgent updates is_approved to false in public.users", async () => {
-      let updatedPayload: any = null;
-      let targetUserId: string | null = null;
-      vi.spyOn(supabase, "from").mockImplementation((table: string) => {
-        return {
-          update: (payload: any) => {
-            updatedPayload = payload;
-            return {
-              eq: (col: string, val: string) => {
-                targetUserId = val;
-                return Promise.resolve({ error: null });
-              },
-            };
-          },
-        } as any;
-      });
-
+    it("unapproveAgent enforces strict permanent approval rule and rejects revocation", async () => {
       const res = await (await import("../src/services/userService")).unapproveAgent("00000000-0000-0000-0000-000000000011");
-      expect(res.error).toBeUndefined();
-      expect(targetUserId).toBe("00000000-0000-0000-0000-000000000011");
-      expect(updatedPayload.is_approved).toBe(false);
+      expect(res.error).toBeDefined();
+      expect(res.error).toContain("cannot be revoked");
     });
   });
 
+
   describe("Agent Workspace Sidebar Filtering Logic", () => {
-    it("filters Assigned to Me: non-closed tickets assigned to current agent", async () => {
+    it("filters Assigned to Me: all tickets (both OPEN and CLOSED) assigned to current agent", async () => {
       const { fetchAgentFilteredTickets } = await import("../src/services/ticketService");
       const agentId = "00000000-0000-0000-0000-000000000022";
       
@@ -265,56 +249,43 @@ describe("Audit Logs & Ticket Queries Service", () => {
       ];
 
       vi.spyOn(supabase, "from").mockImplementation(() => {
-        return {
-          select: () => ({
-            or: () => ({
-              is: () => ({
-                eq: () => ({
-                  neq: () => ({
-                    order: () => Promise.resolve({ data: [mockRows[0]], error: null }),
-                  }),
-                }),
-              }),
-            }),
-          }),
-        } as any;
+        const queryChain: any = {};
+        queryChain.select = () => queryChain;
+        queryChain.or = () => queryChain;
+        queryChain.is = () => queryChain;
+        queryChain.eq = () => queryChain;
+        queryChain.order = () => Promise.resolve({ data: mockRows, error: null });
+        return queryChain;
       });
 
       const results = await fetchAgentFilteredTickets(agentId, "assigned");
-      expect(results.length).toBe(1);
-      expect(results[0].id).toBe("1");
-      expect(results[0].status).toBe("IN_PROGRESS");
+      expect(results.length).toBe(2);
+      expect(results.map((r) => r.id)).toEqual(["1", "2"]);
     });
 
-    it("filters Active Work: IN_PROGRESS or PENDING_CUSTOMER tickets assigned to agent", async () => {
+    it("filters Active Work: tickets NOT CLOSED and NOT RESOLVED assigned to agent", async () => {
       const { fetchAgentFilteredTickets } = await import("../src/services/ticketService");
       const agentId = "00000000-0000-0000-0000-000000000022";
 
       const mockRows = [
         { id: "1", title: "In Progress", status: "IN_PROGRESS", customer_id: "c1", assigned_agent_id: agentId, sla_breach: false },
         { id: "2", title: "Waiting", status: "WAITING_FOR_CUSTOMER", customer_id: "c2", assigned_agent_id: agentId, sla_breach: false },
-        { id: "3", title: "Resolved", status: "RESOLVED", customer_id: "c3", assigned_agent_id: agentId, sla_breach: false },
       ];
 
       vi.spyOn(supabase, "from").mockImplementation(() => {
-        return {
-          select: () => ({
-            or: () => ({
-              is: () => ({
-                eq: () => ({
-                  or: () => ({
-                    order: () => Promise.resolve({ data: [mockRows[0], mockRows[1]], error: null }),
-                  }),
-                }),
-              }),
-            }),
-          }),
-        } as any;
+        const queryChain: any = {};
+        queryChain.select = () => queryChain;
+        queryChain.or = () => queryChain;
+        queryChain.is = () => queryChain;
+        queryChain.eq = () => queryChain;
+        queryChain.not = () => queryChain;
+        queryChain.order = () => Promise.resolve({ data: mockRows, error: null });
+        return queryChain;
       });
 
       const results = await fetchAgentFilteredTickets(agentId, "active");
       expect(results.length).toBe(2);
-      expect(results.map(r => r.id)).toEqual(["1", "2"]);
+      expect(results.map((r) => r.id)).toEqual(["1", "2"]);
     });
 
     it("filters SLA Breached: non-closed tickets with breached SLA", async () => {

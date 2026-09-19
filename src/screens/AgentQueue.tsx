@@ -170,32 +170,31 @@ export default function AgentQueue() {
     );
   }
 
-  // 1. "Assigned to Me": Fetch all non-closed tickets where assigned_agent_id === currentUser.id
+  // 1. "Assigned to Me": Show ALL tickets (both OPEN and CLOSED) assigned to the logged-in agent (assigned_agent_id === currentUser.id)
   const assignedToMe = sortByPriority(
-    tickets.filter((t) => t.assignedAgentId === user.id && t.status !== "CLOSED")
+    tickets.filter((t) => t.assignedAgentId === user.id)
   );
 
-  // 2. "Active Work": Fetch tickets assigned to the current user where status is explicitly 'IN_PROGRESS' or 'PENDING_CUSTOMER' (WAITING_FOR_CUSTOMER)
+  // 2. "Active Work": Show ONLY active tickets assigned to the agent where status is NOT 'CLOSED' and NOT 'RESOLVED' (e.g. status IN ('OPEN', 'TRIAGED', 'ASSIGNED', 'IN_PROGRESS', 'WAITING_FOR_CUSTOMER', 'PENDING_CUSTOMER'))
   const activeWork = sortByPriority(
     tickets.filter(
       (t) =>
         t.assignedAgentId === user.id &&
-        (t.status === "IN_PROGRESS" ||
-          (t.status as string) === "PENDING_CUSTOMER" ||
-          t.status === "WAITING_FOR_CUSTOMER")
+        t.status !== "CLOSED" &&
+        t.status !== "RESOLVED"
     )
   );
 
-  // 3. "SLA Breached": Fetch tickets assigned to the current user where sla_status === 'BREACHED' and status !== 'CLOSED'
+  // 3. "SLA Breached": Show ONLY tickets assigned to the agent where sla_status === 'BREACHED' and status != 'CLOSED'
   const slaBreached = sortByPriority(
     tickets.filter(
       (t) =>
         t.assignedAgentId === user.id &&
+        t.status !== "CLOSED" &&
         (t.slaBreach ||
           (t as any).sla_status === "BREACHED" ||
           (t as any).slaStatus === "BREACHED" ||
-          new Date(t.slaDeadline) < new Date()) &&
-        t.status !== "CLOSED"
+          new Date(t.slaDeadline) < new Date())
     )
   );
 
@@ -206,8 +205,8 @@ export default function AgentQueue() {
   };
 
   const EMPTY_MSGS: Record<QueueView, string> = {
-    assigned: "No active tickets are currently assigned to you.",
-    active: "No tickets currently in progress or waiting for customer response.",
+    assigned: "No tickets are currently assigned to you.",
+    active: "No active work in progress or pending resolution.",
     breach: "Zero SLA breaches across your assigned work.",
   };
 

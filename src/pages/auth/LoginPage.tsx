@@ -15,21 +15,22 @@ const ROLE_CONFIG = [
 export default function LoginPage() {
   const { user, loading: authLoading, refreshProfile } = useAuth();
   const navigate = useNavigate();
-  const [role, setRole] = useState<Role>("CUSTOMER");
+  const [activeTab, setActiveTab] = useState<Role>("CUSTOMER");
   const [email, setEmail] = useState(DEMO_EMAILS.CUSTOMER);
   const [password, setPassword] = useState(DEMO_PASSWORD);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const handleRoleChange = (r: Role) => {
-    setRole(r);
+  const handleTabClick = (r: Role) => {
+    setActiveTab(r);
     setEmail(DEMO_EMAILS[r]);
     setPassword(DEMO_PASSWORD);
     setError("");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
+    // 1. Prevent form default and avoid resetting activeTab or inputs
     e.preventDefault();
     setError("");
     if (!email || !password) {
@@ -57,22 +58,22 @@ export default function LoginPage() {
         .eq("id", data.user.id)
         .single();
 
-      const resolvedRole = (
+      const rawRole = (
         userProfile?.role ||
         data.user.user_metadata?.role ||
         data.user.app_metadata?.role ||
-        role ||
+        activeTab ||
         ""
       ).toUpperCase();
 
-      // Trigger AuthContext profile refresh
+      // Trigger AuthContext profile refresh in background
       await refreshProfile().catch(() => {});
 
       setLoading(false);
 
-      if (resolvedRole === "ADMIN") {
+      if (rawRole === "ADMIN") {
         navigate("/admin/dashboard", { replace: true });
-      } else if (resolvedRole === "SUPPORT_AGENT") {
+      } else if (rawRole === "SUPPORT_AGENT") {
         navigate("/agent/dashboard", { replace: true });
       } else {
         navigate("/customer/dashboard", { replace: true });
@@ -83,6 +84,7 @@ export default function LoginPage() {
     }
   };
 
+  // If already authenticated and session is verified, direct to correct portal
   useEffect(() => {
     if (user && !authLoading) {
       const userRole = (user.role || "").toUpperCase();
@@ -115,14 +117,15 @@ export default function LoginPage() {
         </div>
 
         <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xl">
+          {/* Active Tab Buttons */}
           <div className="grid grid-cols-3 gap-2 mb-6 p-1 bg-slate-100 rounded-xl">
             {ROLE_CONFIG.map(({ role: r, label, icon: Icon }) => (
               <button
                 key={r}
                 type="button"
-                onClick={() => handleRoleChange(r)}
+                onClick={() => handleTabClick(r)}
                 className={`flex flex-col items-center gap-1 py-2.5 px-1 rounded-lg text-xs font-medium transition-all duration-200 cursor-pointer ${
-                  role === r
+                  activeTab === r
                     ? "bg-indigo-600 text-white shadow-md"
                     : "text-slate-700 hover:text-slate-900 hover:bg-slate-200"
                 }`}
@@ -200,14 +203,14 @@ export default function LoginPage() {
                 <button
                   key={r}
                   type="button"
-                  onClick={() => handleRoleChange(r)}
+                  onClick={() => handleTabClick(r)}
                   className={`rounded-lg p-2 border transition-all text-left cursor-pointer ${
-                    role === r
+                    activeTab === r
                       ? "border-indigo-200 bg-indigo-50"
                       : "border-slate-200 bg-slate-50 hover:border-slate-300"
                   }`}
                 >
-                  <div className={`text-xs font-semibold ${role === r ? "text-indigo-700" : "text-slate-700"}`}>
+                  <div className={`text-xs font-semibold ${activeTab === r ? "text-indigo-700" : "text-slate-700"}`}>
                     {label}
                   </div>
                   <div className="text-[10px] text-slate-600 mt-0.5 truncate">{DEMO_EMAILS[r]}</div>

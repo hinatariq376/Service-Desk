@@ -58,8 +58,9 @@ export function mapTicket(row: DbTicket | JoinedTicketRow | any): Ticket {
   if (row.customer && row.customer.id) {
     userCache.set(row.customer.id, row.customer as DbUser);
   }
-  if (row.assigned_agent && row.assigned_agent.id) {
-    userCache.set(row.assigned_agent.id, row.assigned_agent as DbUser);
+  const agentObj = row.agent || row.assigned_agent;
+  if (agentObj && agentObj.id) {
+    userCache.set(agentObj.id, agentObj as DbUser);
   }
 
   const resolutionDeadline =
@@ -69,7 +70,7 @@ export function mapTicket(row: DbTicket | JoinedTicketRow | any): Ticket {
     row.customer?.name ?? (row.customer_id ? getUserName(row.customer_id) : undefined) ?? "Unknown Customer";
 
   const assignedAgentName =
-    row.assigned_agent?.name ?? (row.assigned_agent_id ? getUserName(row.assigned_agent_id) : undefined);
+    agentObj?.name ?? (row.assigned_agent_id ? getUserName(row.assigned_agent_id) : undefined);
 
   return {
     id: row.id,

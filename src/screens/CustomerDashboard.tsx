@@ -15,46 +15,17 @@ import type { Ticket as TicketType } from "../types";
 export default function CustomerDashboard() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
-  const { tickets, messages, loading: contextLoading, error: contextError, createNewTicket } = useTickets();
-  const [customerTickets, setCustomerTickets] = useState<TicketType[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { tickets, messages, loading, error, createNewTicket } = useTickets();
   const [page, setPage] = useState("dashboard");
   const [showModal, setShowModal] = useState(false);
   const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!user) return;
-    let isMounted = true;
-    setLoading(true);
-
-    getTickets(user.id, user.role)
-      .then((data) => {
-        if (isMounted) {
-          setCustomerTickets(data);
-          setError(null);
-        }
-      })
-      .catch((err) => {
-        if (isMounted) {
-          setError(err instanceof Error ? err.message : "Failed to load tickets.");
-        }
-      })
-      .finally(() => {
-        if (isMounted) setLoading(false);
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [user?.id, user?.role, tickets]);
-
   if (!user) return null;
 
-  const myTickets = customerTickets;
+  const myTickets = tickets;
   const activeCount = myTickets.filter((t) => !["RESOLVED", "CLOSED"].includes(t.status)).length;
   const selectedTicket = selectedTicketId
-    ? myTickets.find((t) => t.id === selectedTicketId) || tickets.find((t) => t.id === selectedTicketId) || null
+    ? myTickets.find((t) => t.id === selectedTicketId) || null
     : null;
 
   const PAGE_TITLES: Record<string, string> = {
@@ -94,10 +65,6 @@ export default function CustomerDashboard() {
     attachments?: string[];
   }) => {
     await createNewTicket(partial);
-    if (user) {
-      const data = await getTickets(user.id, user.role);
-      setCustomerTickets(data);
-    }
   };
 
   const handleLogout = async () => {

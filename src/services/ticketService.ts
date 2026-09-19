@@ -27,84 +27,70 @@ export async function getTickets(userId?: string, userRole?: string): Promise<Ti
       .from("tickets")
       .select(`
         *,
-        customer:users!customer_id (id, name, email, role, avatar),
-        assigned_agent:users!assigned_agent_id (id, name, email, role, avatar)
+        customer:users!tickets_customer_id_fkey(id, name, email),
+        agent:users!tickets_assigned_agent_id_fkey(id, name, email)
       `)
-      .or("is_deleted.is.null,is_deleted.eq.false")
-      .is("deleted_at", null)
       .order("created_at", { ascending: false });
 
-    if (normalizedRole === "CUSTOMER") {
-      if (userId) query = query.eq("customer_id", userId);
-    } else if (normalizedRole === "SUPPORT_AGENT") {
-      if (userId) {
-        query = query.or(`assigned_agent_id.eq.${userId},assigned_agent_id.is.null`);
-      }
+    if (normalizedRole === "CUSTOMER" && userId) {
+      query = query.eq("customer_id", userId);
     }
-    // ADMIN role selects all non-deleted tickets without restriction
 
-    const queryRes = await query;
-    let data: any = queryRes.data;
-    const error = queryRes.error;
+    const { data, error } = await query;
+    let ticketRows = data;
 
     if (error) {
-      // Fallback to select("*") if foreign key relationship query fails in mock or test environments
-      const fallbackQuery = supabase
+      // Fallback 1: Try with column-name references if explicit constraint name differs
+      let altQuery = supabase
         .from("tickets")
-        .select("*")
-        .or("is_deleted.is.null,is_deleted.eq.false")
-        .is("deleted_at", null)
+        .select(`
+          *,
+          customer:users!customer_id (id, name, email, role, avatar),
+          assigned_agent:users!assigned_agent_id (id, name, email, role, avatar)
+        `)
         .order("created_at", { ascending: false });
 
-      if (normalizedRole === "CUSTOMER") {
-        if (userId) (fallbackQuery as any).eq("customer_id", userId);
-      } else if (normalizedRole === "SUPPORT_AGENT") {
-        if (userId) {
-          (fallbackQuery as any).or(`assigned_agent_id.eq.${userId},assigned_agent_id.is.null`);
+      if (normalizedRole === "CUSTOMER" && userId) {
+        altQuery = altQuery.eq("customer_id", userId);
+      }
+
+      const altRes = await altQuery;
+      if (!altRes.error && altRes.data) {
+        ticketRows = altRes.data;
+      } else {
+        // Fallback 2: Direct select("*") to bypass schema cache foreign key issues
+        let fallbackQuery = supabase
+          .from("tickets")
+          .select("*")
+          .order("created_at", { ascending: false });
+
+        if (normalizedRole === "CUSTOMER" && userId) {
+          fallbackQuery = fallbackQuery.eq("customer_id", userId);
+        }
+
+        const fallbackRes = await fallbackQuery;
+        if (!fallbackRes.error && fallbackRes.data) {
+          ticketRows = fallbackRes.data;
         }
       }
-      const res = await fallbackQuery;
-      if (res.error) throw new Error(res.error.message);
-      data = res.data;
     }
-    if (data && data.length > 0) {
-      return data.map(mapTicket);
-    }
-    // If DB is empty, return initial mock tickets for testing/preview
-    if (data && data.length === 0) {
-      if (normalizedRole === "CUSTOMER") {
-        return MOCK_TICKETS.filter(
-          (t) => !(t as any).isDeleted && !(t as any).is_deleted && t.customerId === userId,
-        );
+
+    if (ticketRows && Array.isArray(ticketRows)) {
+      const activeRows = ticketRows.filter((r: any) => !r.deleted_at && !r.is_deleted);
+      if (activeRows.length > 0 || ticketRows.length > 0) {
+        return activeRows.map(mapTicket);
       }
-      if (normalizedRole === "SUPPORT_AGENT") {
-        return MOCK_TICKETS.filter(
-          (t) =>
-            !(t as any).isDeleted &&
-            !(t as any).is_deleted &&
-            (!userId || t.assignedAgentId === userId || !t.assignedAgentId),
-        );
-      }
-      return MOCK_TICKETS.filter((t) => !(t as any).isDeleted && !(t as any).is_deleted);
     }
-    return [];
-  } catch (_) {
-    // Graceful fallback to mock data when network / database is offline
-    if (normalizedRole === "CUSTOMER") {
-      return MOCK_TICKETS.filter(
-        (t) => !(t as any).isDeleted && !(t as any).is_deleted && t.customerId === userId,
-      );
-    }
-    if (normalizedRole === "SUPPORT_AGENT") {
-      return MOCK_TICKETS.filter(
-        (t) =>
-          !(t as any).isDeleted &&
-          !(t as any).is_deleted &&
-          (!userId || t.assignedAgentId === userId || !t.assignedAgentId),
-      );
-    }
-    return MOCK_TICKETS.filter((t) => !(t as any).isDeleted && !(t as any).is_deleted);
+  } catch (err) {
+    console.warn("getTickets exception, using fallback:", err);
   }
+
+  // Graceful fallback to mock data when network / database is offline
+  let mockList = MOCK_TICKETS.filter((t) => !(t as any).isDeleted && !(t as any).is_deleted);
+  if (normalizedRole === "CUSTOMER" && userId) {
+    mockList = mockList.filter((t) => t.customerId === userId);
+  }
+  return [...mockList].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 }
 
 export async function fetchTicketsForUser(user: User): Promise<Ticket[]> {
@@ -126,9 +112,8 @@ export async function fetchAgentFilteredTickets(
         customer:users!customer_id (id, name, email, role, avatar),
         assigned_agent:users!assigned_agent_id (id, name, email, role, avatar)
       `)
-      .or("is_deleted.is.null,is_deleted.eq.false")
-      .is("deleted_at", null)
-      .eq("assigned_agent_id", agentId);
+      .eq("assigned_agent_id", agentId)
+      .order("created_at", { ascending: false });
 
     if (filter === "assigned") {
       // Show ALL tickets (both OPEN and CLOSED) assigned to agent
@@ -138,9 +123,9 @@ export async function fetchAgentFilteredTickets(
       query = query.neq("status", "CLOSED").or("sla_breach.eq.true,sla_status.eq.BREACHED");
     }
 
-    const { data, error } = await query.order("created_at", { ascending: false });
+    const { data, error } = await query;
     if (!error && data && data.length > 0) {
-      return data.map(mapTicket);
+      return data.filter((r: any) => !r.deleted_at && !r.is_deleted).map(mapTicket);
     }
   } catch (_) {}
 
@@ -199,6 +184,18 @@ export async function createTicket(
   const sla = computeSLADeadlines(partial.priority, now);
 
   try {
+    // Ensure customer user profile exists in public.users to satisfy foreign keys
+    if (user && user.id) {
+      await supabase.from("users").upsert({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        is_approved: user.isApproved ?? (user.role !== "SUPPORT_AGENT"),
+        approval_status: user.approvalStatus ?? (user.role === "SUPPORT_AGENT" ? "PENDING" : "APPROVED"),
+      }).select("id").maybeSingle().catch(() => {});
+    }
+
     const { data, error } = await supabase
       .from("tickets")
       .insert({
@@ -219,10 +216,14 @@ export async function createTicket(
       .select("*")
       .single();
 
-    if (error) throw new Error(error.message);
+    if (error) {
+      console.error("Supabase createTicket error:", error);
+      throw new Error(error.message);
+    }
     await loadUserDirectory();
     return mapTicket(data);
-  } catch (_) {
+  } catch (err) {
+    console.warn("createTicket fallback to memory:", err);
     // Local mock ticket creation fallback
     const id = typeof crypto !== "undefined" && crypto.randomUUID
       ? crypto.randomUUID()

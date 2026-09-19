@@ -61,7 +61,7 @@ export default function AllSystemTickets({ tickets }: AllSystemTicketsProps) {
     .sort((a, b) => {
       let cmp = 0;
       if (sortKey === "priority") cmp = PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority];
-      else if (sortKey === "createdAt") cmp = new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      else if (sortKey === "createdAt") cmp = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
       else if (sortKey === "id") cmp = a.displayId.localeCompare(b.displayId);
       else if (sortKey === "status") cmp = a.status.localeCompare(b.status);
       return sortAsc ? cmp : -cmp;

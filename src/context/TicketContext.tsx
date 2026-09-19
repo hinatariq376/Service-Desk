@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import { supabase } from "../lib/supabase";
+import { mapTicket } from "../lib/mappers";
 import { useAuth } from "./AuthContext";
 import {
   addComment,
@@ -90,14 +91,61 @@ export function TicketProvider({ children }: { children: ReactNode }) {
 
     const channel = supabase
       .channel(`service-desk-live-${user.id}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "tickets" }, (payload) => {
-        console.log("Realtime ticket update received:", payload);
-        refresh();
-      })
-      .on("postgres_changes", { event: "*", schema: "public", table: "ticket_comments" }, (payload) => {
-        console.log("Realtime comment update received:", payload);
-        refresh();
-      })
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "tickets" },
+        (payload) => {
+          console.log("Realtime ticket INSERT received:", payload);
+          const newRow = payload.new;
+          if (newRow && (!newRow.deleted_at && !newRow.is_deleted)) {
+            const mapped = mapTicket(newRow);
+            setTickets((prev) => {
+              if (prev.some((t) => t.id === mapped.id)) return prev;
+              return [mapped, ...prev];
+            });
+          }
+          refresh();
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "tickets" },
+        (payload) => {
+          console.log("Realtime ticket UPDATE received:", payload);
+          const updatedRow = payload.new;
+          if (updatedRow) {
+            if (updatedRow.deleted_at || updatedRow.is_deleted) {
+              setTickets((prev) => prev.filter((t) => t.id !== updatedRow.id));
+            } else {
+              const mapped = mapTicket(updatedRow);
+              setTickets((prev) =>
+                prev.map((t) => (t.id === mapped.id ? { ...t, ...mapped } : t))
+              );
+            }
+          }
+          refresh();
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "tickets" },
+        (payload) => {
+          console.log("Realtime ticket DELETE received:", payload);
+          const oldRow = payload.old;
+          if (oldRow?.id) {
+            setTickets((prev) => prev.filter((t) => t.id !== oldRow.id));
+          }
+          refresh();
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "ticket_comments" },
+        (payload) => {
+          console.log("Realtime comment update received:", payload);
+          refresh();
+        }
+      )
       .on("postgres_changes", { event: "*", schema: "public", table: "users" }, () => {
         refresh();
       })

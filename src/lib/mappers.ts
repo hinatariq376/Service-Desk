@@ -14,6 +14,10 @@ export function getUserName(id: string | null | undefined): string | undefined {
 
 export function mapUser(row: DbUser | any): User {
   userCache.set(row.id, row);
+  const rawRole = (row.role || "CUSTOMER").toUpperCase();
+  const role: Role =
+    rawRole === "ADMIN" ? "ADMIN" : rawRole === "SUPPORT_AGENT" ? "SUPPORT_AGENT" : "CUSTOMER";
+
   let approvalStatus: "PENDING" | "APPROVED" | "DENIED" = "PENDING";
   if (row.approval_status === "APPROVED" || row.approval_status === "DENIED" || row.approval_status === "PENDING") {
     approvalStatus = row.approval_status;
@@ -21,7 +25,7 @@ export function mapUser(row: DbUser | any): User {
     approvalStatus = "APPROVED";
   } else if (row.is_approved === false) {
     approvalStatus = "PENDING";
-  } else if (row.role !== "SUPPORT_AGENT") {
+  } else if (role !== "SUPPORT_AGENT") {
     approvalStatus = "APPROVED";
   }
 
@@ -31,7 +35,7 @@ export function mapUser(row: DbUser | any): User {
     id: row.id,
     name: row.name,
     email: row.email,
-    role: row.role as Role,
+    role,
     avatar: row.avatar ?? undefined,
     isApproved,
     approvalStatus,

@@ -43,7 +43,12 @@ export default function RegisterPage() {
     }
 
     setSuccess("Account created successfully. Redirecting…");
-    setTimeout(() => navigate("/"), 1200);
+    const resolvedRole = role.toUpperCase();
+    if (resolvedRole === "SUPPORT_AGENT") {
+      setTimeout(() => navigate("/agent/dashboard", { replace: true }), 1000);
+    } else {
+      setTimeout(() => navigate("/customer/dashboard", { replace: true }), 1000);
+    }
   };
 
   return (

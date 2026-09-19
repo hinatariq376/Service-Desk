@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Shield, Eye, EyeOff, Headphones, User, Settings } from "lucide-react";
+import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../context/AuthContext";
 import type { Role } from "../../types";
 import { DEMO_EMAILS, DEMO_PASSWORD } from "../../types";
@@ -12,7 +13,7 @@ const ROLE_CONFIG = [
 ];
 
 export default function LoginPage() {
-  const { signIn, user } = useAuth();
+  const { user, loading: authLoading, refreshProfile } = useAuth();
   const navigate = useNavigate();
   const [role, setRole] = useState<Role>("CUSTOMER");
   const [email, setEmail] = useState(DEMO_EMAILS.CUSTOMER);
@@ -21,19 +22,6 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Helper function to handle exact dashboard routing by role
- const routeUserByRole = (targetRole?: string | Role) => {
-    const roleStr = String(targetRole || "").toUpperCase();
-    
-    if (roleStr.includes("AGENT")) {
-      navigate("/agent/dashboard");
-    } else if (roleStr.includes("ADMIN")) {
-      navigate("/admin/dashboard");
-    } else {
-      navigate("/customer/dashboard");
-    }
-  };
-
   const handleRoleChange = (r: Role) => {
     setRole(r);
     setEmail(DEMO_EMAILS[r]);
@@ -41,7 +29,7 @@ export default function LoginPage() {
     setError("");
   };
 
-const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     if (!email || !password) {
@@ -50,27 +38,65 @@ const handleSubmit = async (e: React.FormEvent) => {
     }
     setLoading(true);
 
-    const selectedRole = role;
+    try {
+      const { data, error: signInErr } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-    const result = await signIn(email, password);
-    setLoading(false);
+      if (signInErr || !data?.user) {
+        setLoading(false);
+        setError(signInErr?.message || "Invalid email or password.");
+        return;
+      }
 
-    if (result?.error) {
-      setError(result.error);
-      return;
+      // Explicitly fetch user profile from public.users
+      const { data: userProfile } = await supabase
+        .from("users")
+        .select("role, is_approved")
+        .eq("id", data.user.id)
+        .single();
+
+      const resolvedRole = (
+        userProfile?.role ||
+        data.user.user_metadata?.role ||
+        data.user.app_metadata?.role ||
+        role ||
+        ""
+      ).toUpperCase();
+
+      // Trigger AuthContext profile refresh
+      await refreshProfile().catch(() => {});
+
+      setLoading(false);
+
+      if (resolvedRole === "ADMIN") {
+        navigate("/admin/dashboard", { replace: true });
+      } else if (resolvedRole === "SUPPORT_AGENT") {
+        navigate("/agent/dashboard", { replace: true });
+      } else {
+        navigate("/customer/dashboard", { replace: true });
+      }
+    } catch (err) {
+      setLoading(false);
+      setError(err instanceof Error ? err.message : "Failed to sign in.");
     }
-
-    const userRole = user?.role || selectedRole;
-    routeUserByRole(userRole);
   };
 
-useEffect(() => {
-    if (user) {
-      routeUserByRole(user.role || role);
+  useEffect(() => {
+    if (user && !authLoading) {
+      const userRole = (user.role || "").toUpperCase();
+      if (userRole === "ADMIN") {
+        navigate("/admin/dashboard", { replace: true });
+      } else if (userRole === "SUPPORT_AGENT") {
+        navigate("/agent/dashboard", { replace: true });
+      } else {
+        navigate("/customer/dashboard", { replace: true });
+      }
     }
-  }, [user]);
+  }, [user, authLoading, navigate]);
 
-  if (user) return null;
+  if (user && !authLoading) return null;
 
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
@@ -95,7 +121,7 @@ useEffect(() => {
                 key={r}
                 type="button"
                 onClick={() => handleRoleChange(r)}
-                className={`flex flex-col items-center gap-1 py-2.5 px-1 rounded-lg text-xs font-medium transition-all duration-200 ${
+                className={`flex flex-col items-center gap-1 py-2.5 px-1 rounded-lg text-xs font-medium transition-all duration-200 cursor-pointer ${
                   role === r
                     ? "bg-indigo-600 text-white shadow-md"
                     : "text-slate-700 hover:text-slate-900 hover:bg-slate-200"
@@ -144,7 +170,7 @@ useEffect(() => {
             </div>
 
             {error && (
-              <div className="text-xs text-red-400 bg-red-950/50 border border-red-900 rounded-lg px-3 py-2">
+              <div className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3.5 py-2.5 animate-fade-up">
                 {error}
               </div>
             )}
@@ -152,7 +178,7 @@ useEffect(() => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-60 text-white font-semibold rounded-lg py-2.5 text-sm transition-all duration-200 shadow-lg shadow-indigo-900/30 mt-2"
+              className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white font-semibold rounded-lg py-2.5 text-sm transition-all duration-200 shadow-md shadow-indigo-600/20 mt-2 cursor-pointer"
             >
               {loading ? (
                 <span className="inline-flex items-center gap-2">
@@ -175,7 +201,7 @@ useEffect(() => {
                   key={r}
                   type="button"
                   onClick={() => handleRoleChange(r)}
-                  className={`rounded-lg p-2 border transition-all text-left ${
+                  className={`rounded-lg p-2 border transition-all text-left cursor-pointer ${
                     role === r
                       ? "border-indigo-200 bg-indigo-50"
                       : "border-slate-200 bg-slate-50 hover:border-slate-300"

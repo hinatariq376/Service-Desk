@@ -27,8 +27,8 @@ export async function getTickets(userId?: string, userRole?: string): Promise<Ti
       .from("tickets")
       .select(`
         *,
-        customer:users!tickets_customer_id_fkey(id, name, email),
-        agent:users!tickets_assigned_agent_id_fkey(id, name, email)
+        customer:users!tickets_customer_id_fkey(id, name, email, avatar),
+        agent:users!tickets_assigned_agent_id_fkey(id, name, email, avatar)
       `)
       .order("created_at", { ascending: false });
 
@@ -40,6 +40,7 @@ export async function getTickets(userId?: string, userRole?: string): Promise<Ti
     let ticketRows = data;
 
     if (error) {
+      console.warn("getTickets primary query error, using fallback queries:", error.message);
       // Fallback 1: Try with column-name references if explicit constraint name differs
       let altQuery = supabase
         .from("tickets")
@@ -77,15 +78,13 @@ export async function getTickets(userId?: string, userRole?: string): Promise<Ti
 
     if (ticketRows && Array.isArray(ticketRows)) {
       const activeRows = ticketRows.filter((r: any) => !r.deleted_at && !r.is_deleted);
-      if (activeRows.length > 0 || ticketRows.length > 0) {
-        return activeRows.map(mapTicket);
-      }
+      return activeRows.map(mapTicket);
     }
   } catch (err) {
     console.warn("getTickets exception, using fallback:", err);
   }
 
-  // Graceful fallback to mock data when network / database is offline
+  // Graceful fallback to mock data ONLY when network / database is completely offline
   let mockList = MOCK_TICKETS.filter((t) => !(t as any).isDeleted && !(t as any).is_deleted);
   if (normalizedRole === "CUSTOMER" && userId) {
     mockList = mockList.filter((t) => t.customerId === userId);

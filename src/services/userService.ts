@@ -6,10 +6,15 @@ import type { Role, User } from "../types";
 export async function fetchAllUsers(): Promise<User[]> {
   try {
     const { data, error } = await supabase.from("users").select("*").order("name");
-    if (error) throw new Error(error.message);
-    if (data && data.length > 0) return data.map(mapUser);
-  } catch (_) {}
-  return MOCK_USERS;
+    if (error) {
+      console.warn("fetchAllUsers query warning:", error.message);
+      return [];
+    }
+    if (data && Array.isArray(data)) return data.map(mapUser);
+  } catch (err) {
+    console.error("fetchAllUsers exception:", err);
+  }
+  return [];
 }
 
 export async function fetchSupportAgents(onlyApproved = true): Promise<User[]> {
@@ -25,19 +30,30 @@ export async function fetchSupportAgents(onlyApproved = true): Promise<User[]> {
     }
 
     const { data, error } = await query;
-    if (error) throw new Error(error.message);
-    if (data && data.length > 0) return data.map(mapUser).filter((u) => !onlyApproved || u.isApproved !== false);
-  } catch (_) {}
-  return MOCK_USERS.filter((u) => u.role === "SUPPORT_AGENT" && (!onlyApproved || u.isApproved !== false));
+    if (error) {
+      console.warn("fetchSupportAgents query warning:", error.message);
+      return [];
+    }
+    if (data && Array.isArray(data)) {
+      return data.map(mapUser).filter((u) => !onlyApproved || u.isApproved !== false);
+    }
+  } catch (err) {
+    console.error("fetchSupportAgents exception:", err);
+  }
+  return [];
 }
 
 export async function fetchUserProfile(userId: string): Promise<User | null> {
   try {
     const { data, error } = await supabase.from("users").select("*").eq("id", userId).maybeSingle();
-    if (error) throw new Error(error.message);
+    if (error) {
+      console.warn("fetchUserProfile query warning:", error.message);
+    }
     if (data) return mapUser(data);
-  } catch (_) {}
-  return MOCK_USERS.find((u) => u.id === userId) || null;
+  } catch (err) {
+    console.error("fetchUserProfile exception:", err);
+  }
+  return null;
 }
 
 export async function upsertUserProfile(params: {

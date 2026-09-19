@@ -81,15 +81,10 @@ export async function getTickets(userId?: string, userRole?: string): Promise<Ti
       return activeRows.map(mapTicket);
     }
   } catch (err) {
-    console.warn("getTickets exception, using fallback:", err);
+    console.error("getTickets exception:", err);
   }
 
-  // Graceful fallback to mock data ONLY when network / database is completely offline
-  let mockList = MOCK_TICKETS.filter((t) => !(t as any).isDeleted && !(t as any).is_deleted);
-  if (normalizedRole === "CUSTOMER" && userId) {
-    mockList = mockList.filter((t) => t.customerId === userId);
-  }
-  return [...mockList].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  return [];
 }
 
 export async function fetchTicketsForUser(user: User): Promise<Ticket[]> {
@@ -123,12 +118,11 @@ export async function fetchAgentFilteredTickets(
     }
 
     const { data, error } = await query;
-    if (!error && data && data.length > 0) {
+    if (!error && data && Array.isArray(data)) {
       return data.filter((r: any) => !r.deleted_at && !r.is_deleted).map(mapTicket);
     }
   } catch (_) {}
 
-  // Fallback / mock data filter
   const all = await getTickets(agentId, "SUPPORT_AGENT");
   if (filter === "assigned") {
     return all.filter((t) => t.assignedAgentId === agentId);
@@ -160,13 +154,14 @@ export async function fetchMessagesForTickets(ticketIds: string[]): Promise<Mess
       .is("deleted_at", null)
       .order("created_at", { ascending: true });
 
-    if (error) throw new Error(error.message);
-    if (data && data.length > 0) return data.map((row) => mapComment(row));
-  } catch (_) {
-    return MOCK_MESSAGES.filter((m) => ticketIds.includes(m.ticketId));
+    if (!error && data && Array.isArray(data)) {
+      return data.map((row) => mapComment(row));
+    }
+  } catch (err) {
+    console.error("fetchMessagesForTickets error:", err);
   }
 
-  return MOCK_MESSAGES.filter((m) => ticketIds.includes(m.ticketId));
+  return [];
 }
 
 export async function createTicket(
